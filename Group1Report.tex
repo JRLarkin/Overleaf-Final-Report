@@ -189,7 +189,7 @@ These values generated the following pre-processed images shown in Figure 4.
 	\\
 	\subsection{Canny Edge Detection and the Hough Line Transform}
 	
-	The \textit{Hough Line Transform} relies on the detection of pixels within a series of lines superimposed onto a sample image. Rather than a typical first-order equation $y=mx+c$, the method defines these lines as the perpendicular normal to a line of angle $\theta$ from the top-left origin.
+	The \textit{Hough Line Transform} relies on the detection of pixels within a series of lines superimposed onto a sample image. Rather than a typical first-order equation $y=mx+c$, the method defines these lines as the perpendicular normal to a line of angle $\theta$ from the top-left origin. Text
 	\\
 	\\	
 	It has been established that Hough transform is useful in detecting shapes using mathematical forms such as cartesian coordinates. For the case of straight lines, \textit{Hough space} can be used to identify the distance from the image origin to a line and the angle of the line relative to a specified axis. This description is for the OpenCV, \textit{cv2}, module which uses the ‘cv2.houghlines’ function. The main advantage of using Hough transform when put up against skeletonise is that it can return rho and theta values in a 2D array. Rho is the distance which is taken as positive if the line is above the origin and negative if the line is below the origin. Theta is the angle measured from the horizontal axis in the counter-clockwise direction. ‘Hough.transform’ uses the coordinate system (rho, theta) in a voting system \cite{OpenCV2013}. Here, a straight horizontal black line can be visualised in a white background image. If the start point of the line is at an initial value of (40, 90), ‘Hough.transform’ will detect this and begin searching the image to find matching the number of (40,90) cells. The maximum count for this cell would indicate that a line lies on this coordinate \cite{OpenCV2013}. When using the function, Canny edge detection was used to better visualise the hydrides. This function can also simply threshold and binarise an image, without allowing the user to change truncation or sigma values. After testing, the following results were given, as shown in Figure \_ (a) and (b). 
@@ -209,7 +209,11 @@ These values generated the following pre-processed images shown in Figure 4.
 \subsection{Initial Approach using Hough Line Transform}
 
 
-Due to difficulties in implementing a viable technique for determining the level of connectivity of hdyrides within test micrographs, the focus of the project was adjusted to assist in determining the likelihood of through-wall cracking and subsequent mechanical failure of analysed zirconium samples. As previously highlighted, the rate of degradation of fuel cladding is dependent on the orientation of hydrides within the grains. However as observed many samples exhibit hydrides oriented both radially and tangentially; a ratio is therefore needed to assess the contributions of the grain orientations to the likelihood of failure by through-wall cracking. Known as the \textit{Radial Hydride Fraction} (RHF), this
+Due to difficulties in implementing a viable technique for determining the level of connectivity of hdyrides within test micrographs, the focus of the project was adjusted to assist in determining the likelihood of through-wall cracking and subsequent mechanical failure of analysed zirconium samples. As previously highlighted, the rate of degradation of fuel cladding is dependent on the orientation of hydrides within the grains. However as observed many samples exhibit hydrides oriented both radially and circumferentially; a ratio is therefore needed to assess the contributions of the hydride orientations to the likelihood of failure by through-wall cracking. Known as the \textit{Radial Hydride Fraction} (RHF), this
+
+%in one of my older notebooks, I wrote an explanation "connectivity testing" I think it was called - I'm not sure if it directly correlates to cracking
+%Maybe we say that hydrides orientated radially are more likely of concern in cracking OR maybe you have already said that and I didn't get it :D
+
 Initial approach, hough line transform over the whole image
 
 \subsection{Refined Approach}
