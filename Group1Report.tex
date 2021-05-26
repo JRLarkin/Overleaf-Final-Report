@@ -307,9 +307,17 @@ The output of the tests produced by the workflow as summarised in Table \ref{Tes
     \label{TestResults}
 \end{table}
 
-It can be seen from the results, that only Test image 1 was able to pass all tests. Test images 2 and 3 failed some of the criteria which will be discussed further.
-\subsection{Discussion}
-Discussion of results
+It can be seen from the results, that only Test image 1 was able to pass all tests. Test images 2 and 3 failed some of the criteria. This is made obvious when looking at the output RHF in Table \ref{TestResults}. Test image 2 shows an unexpected result, and Test image 3 has some marginal error and is 1\% out from the expected value. This is not a major concern for Test image 3, as it is approximately correct (though the code does not recognise this), however for Test image 2 these is quite a high margin of error with RHF being approximately 13\% greater than expected. In order to verify what this may, the images were run through the python functions manually using inputs from Table \ref{tab:TestImageTable} to see the hough transform output. This is shown in Figure for Test images 2 and 3.
+
+%I cant seem to get latex to detect these figures but they are in the right area?
+\begin{figure}
+    \centering
+    \subfloat[Test image 2 processed]{\includegraphics[width=0.4\textwidth]{Figures/test2_processed.png}}
+    \hfill
+    \subfloat[Test image 3 processed]{\includegraphics[width=0.4\textwidth]{Figures/test3_processed.png}}
+    \caption{Test images run through hough\_measurebox using default inputs, some noise is seen from the binary thresholding which highlights a problem.}
+    \label{TestImagesProcessed}
+\end{figure}
 
 \section{Conclusions}
 \subsection{On Hydride Structure Analysis}
