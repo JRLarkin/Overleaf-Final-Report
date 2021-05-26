@@ -208,21 +208,106 @@ These values generated the following pre-processed images shown in Figure 4.
 \section{Radial Hydride Fraction to Assess Connectivity}
 \subsection{Initial Approach using Hough Line Transform}
 
+Due to difficulties in implementing a viable technique for determining the level of connectivity of hydrides within test micrographs, the focus of the project was adjusted to assist in determining the likelihood of through-wall cracking and subsequent mechanical failure of analysed zirconium samples. As previously highlighted, the rate of degradation of fuel cladding is dependent on the orientation of hydrides within the grains. However as observed many samples exhibit hydrides oriented both radially and circumferentially; a ratio is therefore needed to assess the contributions of the hydride orientations to the likelihood of failure by through-wall cracking. Known as the \textit{Radial Hydride Fraction} (RHF), this
 
-Due to difficulties in implementing a viable technique for determining the level of connectivity of hdyrides within test micrographs, the focus of the project was adjusted to assist in determining the likelihood of through-wall cracking and subsequent mechanical failure of analysed zirconium samples. As previously highlighted, the rate of degradation of fuel cladding is dependent on the orientation of hydrides within the grains. However as observed many samples exhibit hydrides oriented both radially and circumferentially; a ratio is therefore needed to assess the contributions of the hydride orientations to the likelihood of failure by through-wall cracking. Known as the \textit{Radial Hydride Fraction} (RHF), this
 
 %in one of my older notebooks, I wrote an explanation "connectivity testing" I think it was called - I'm not sure if it directly correlates to cracking
 %Maybe we say that hydrides orientated radially are more likely of concern in cracking OR maybe you have already said that and I didn't get it :D
 
 Initial approach, hough line transform over the whole image
 
+influence of peak number on RHF - 1, 5, 10 - greater detectability of objects within images.
+Noise as top \& bottom of image does influence results.
+
 \subsection{Refined Approach}
 Explain methodology that we use to obtain ACTUAL RHF - image slicing and the box.
+
+\subsection{Implementing Automatic Testing}
+In order to learn how to implement automatic testing using GitHub and Python, and to check reliability of the analysis of the code in this study, automatic testing was implemented. This was done using the Python Application GitHub action in Git workflows, utilising the \textit{pytest} package. As it is difficult to automatically test the image processing steps of the study, it was thought to assess the the analysis of RHF as this is a quantity that can be somewhat predicted. So a methodology was proposed to produce a number of "test hydride" images which had a known radial hydride fraction, or in this case approximately estimated based on the previously explained criteria of RHF. Figures \ref{TestImages64} and \ref{TestImage300} below shows the test images created.
+
+%is there a way to neaten out this hspace without a hfill ??
+\begin{figure}[h]
+		\begin{center}
+		\subfloat[Test image 1, 64 by 64 pixels, with 3 radially orientated false hydrides]{\includegraphics[width=0.2\textwidth]{./Figures/Test_1.jpg}
+		\label{TestImage1}}
+		\hspace{6pt} 
+		\subfloat[Test image 2, 64 by 64 pixels, Test Image 1 rotated by 90 degrees]{\includegraphics[width=0.2\textwidth]{./Figures/Test_2.jpg}
+		\label{TestImage2}}
+		\caption{The first test hydride images produced of 64 by 64 pixel size.}
+		\label{TestImages64}
+		\end{center}
+	\end{figure}
+
+\begin{figure}[h]
+    \begin{center}
+    \includegraphics[width=2.0in]{Figures/Test_3.jpg} 
+    \caption{Test image 3, 300 by 300 pixels, with a single circumferential hydride.}
+    \label{TestImage300}
+    \end{center}
+\end{figure}
+
+The test images were produced in ImageJ software, setting the background as white (a value of 255 when read into skimage) and the fake hydrides as black (0). The first 2 images were set to image size of 64 pixel squares, with approximately 40 pixel object lengths (these were drawn on with angles 90\degree and 0\degree respectively). The third image was created in the same manner, except its size was set to 300 by 300 pixels, as this is closer to the sample micrograph images assessed in the study. This image had only 1 fake hydride of 260 pixel length. These images should have Radial hydride fractions of 1.0, 0.0 and 0.0 respectively if the code functions as it should and detects only these singular objects in the hough transform.
+
+Based on this, a testing procedure was proposed which sets a number of criteria that pytest would be able to test the images against using the \textit{assert} command. For \textbf{Test image 1}, a wholely radially orientated image, this cycled through:
+
+\begin{center}
+    Test 1: $assert\:RHF > 0.8$ \newline
+    Test 2: $assert\:RHF > 0.9$ \newline
+    Test 3: $assert\:RHF == 1.0$ \newline
+\end{center}
+
+For \textbf{Test images 2 and 3}, similar criteria were set but reversed as the fake hydrides were orientated in the circumferential direction, as follows:
+\begin{center}
+    Test 1: $assert\:RHF < 0.2$ \newline
+    Test 2: $assert\:RHF < 0.1$ \newline
+    Test 3: $assert\:RHF == 0.0$ \newline 
+\end{center}
+
+These criteria would allow users to see if a test image fell into the expected RHF range depending how it is orientated, and then finally it can be checked to see if the function is truly accurate by assessing whether RHF is equal to 1.0 or 0.0.  However before doing this the images must be pre-processed similarly to the micrographs analysed in the study, which means running them through \textit{skblur} and \textit{skbinary} in the test code. To minimise the effect that these may have, they were run with specified inputs shown in Table \ref{tab:TestImageTable}. A Gaussian blur sigma and binary threshold of 0 is used, to produce no blurring and to set any image objects to binary pixels.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|}
+    \hline
+        \textbf{Function parameter} & \textbf{Test image input}  \\
+        \hline
+        $\sigma$ (Gaussian blur) & 0.0 \\
+        \hline
+        Gaussian Truncation Value & 3 \\
+        \hline
+        Intensity Threshold Value & 0 \\ 
+    \hline
+    \end{tabular}
+    \caption{Test image pre-processing parameters used for \textit{skblur} and \textit{skbinary}.}
+    \label{tab:TestImageTable}
+\end{table}
+
+After this, testing could be implemented with the criteria as explained above in each case. A separate test .py file was made for each test image, and then whenever the testing reposity was pushed or a pull request was created, the test workflow would run.
 
 \section{Results and Discussion}
 \subsection{Resulting Radial Hydride Fractions}
 Results
+\subsection{Automatic Testing Pytest Results}
+The output of the tests produced by the workflow as summarised in Table \ref{TestResults}.
 
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|}
+    \hline
+        \textbf{Test Image} & \textbf{Tests Passed} & \textbf{Output RHF From Testing}  \\
+        \hline
+        1 & 3/3 & 1.0 \\
+        \hline
+        2 & 1/3 & 0.13 \\
+        \hline
+        3 & 2/3 & 0.01 \\
+        \hline
+    \end{tabular}
+    \caption{The output of the automatic testing with pytest on GitHub using test images.}
+    \label{TestResults}
+\end{table}
+
+It can be seen from the results, that only Test image 1 was able to pass all tests. Test images 2 and 3 failed some of the criteria which will be discussed further.
 \subsection{Discussion}
 Discussion of results
 
