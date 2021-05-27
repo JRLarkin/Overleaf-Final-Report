@@ -90,14 +90,16 @@
 	Applying the same parameters in a Gaussian filter to different images tends to yield largely different results for the quantity of noise reduction in a range of images. In the sample image set provided for this investigation, many TEM micrographs exhibited a high degree of peripheral darkening, which leads to difficulties in applying an effective intensity threshold without suffering losses to the visible hydrides. As such, a threshold and standard deviation must be manually agreed upon for each image to ensure maximum hydride retention whilst eliminating a sufficient quantity of noise. This presents a significant limitation of the approach as large quantities of micrographs may become time-intensive to analyse. In addition, the systematic removal of small hydride regions may generate a significant source of error when cross-comparing images. Practically, this can cause an over- or underestimation of hydride quantity within a sample and difficulties may arise in subsequent connectivity analysis.
 	\\ 
 	\\
-	For the sample set of images; \textit{chu1, chu2, chu3, chu7, chu11}, threshold and filter values (namely $=\sigma$) were agreed upon based on their perceived effectiveness as follows. Thresholding is a very simple operation and is applied with a simple python function that reads in the previously blurred image array, plots a respective histogram of it's values, and then applies the following operation, based on the specified threshold;
+	For the sample set of images; \textit{chu1, chu2, chu3, chu7, chu11}, threshold and filter values (namely $=\sigma$) were agreed upon based on their perceived effectiveness as follows. Thresholding is a very simple operation and is applied with a simple python function that reads in the previously blurred image array, plots a respective histogram of it's pixel intensity values, and then applies the following operation, based on the specified threshold;
 	\begin{center}
 		In respective image array: $ value > threshold = true $
 	\end{center}
 	This sets any values in the image array greater than said threshold to true, numpy in python is then able to interpret this and convert this to an integer array of 1's and 0's which produces the binary images as displayed further on. In this case, a value of 1 is equal to white, when read in by skimage.
 	\\
 	\\
-	Two sets of parameters were selected for each image conversion to highlight the effect of gaussian blurring and thresholding on the output images. As such, the images filtered with the lower set of values are referred to as \textit{low-pass} (LP) and those filtered through higher values are denoted \textit{high-pass} (HP), see Table \ref{tab:imageprocessing}. It was decided to proceed with the low-pass binary images produced in an effort to reduce both excessive noise and excessive hydride omission.
+	Threshold values could be experimented with by simply running the code, viewing the histogram and going back to change the threshold to a more optimal value appropriately. Two sets of parameters were selected for each image conversion to highlight the effect of gaussian blurring and thresholding on the output images. This was done after some experimentation to find the appropriate range of values to find a satisfactory output image. 
+	
+	As such, the images filtered with the lower set of values are referred to as \textit{low-pass} (LP) and those filtered through higher values are denoted \textit{high-pass} (HP), see Table \ref{tab:imageprocessing}. It was decided to proceed to analysis with the low-pass binary images produced in an effort to reduce both excessive noise and excessive hydride omission.
 	\\
 	\begin{table}[ht]
 	\begin{center}
@@ -133,7 +135,9 @@
 	\end{center}
 	\end{table}
 	\\
-These values generated the following pre-processed images shown in Figure 4.
+These values generated the following pre-processed images shown in Figure \ref{fig:chu11LPHP}. It can be seen that the HP images have introduced much more noise and darkened areas, which warps the size of the hydrides.
+
+%Is there an overall label for the combined figure? I dont know how to add it properly ~alex
 	\begin{figure}[H]
 		\centering
 		\subfloat[\textit{chu1(LP)}: $\sigma$=0.5, T=0.4]{\includegraphics[width=0.4\textwidth]{Figures/chu1_binary3_sigma05_thres04.jpg}\label{chu1LP}}
@@ -307,17 +311,23 @@ The output of the tests produced by the workflow as summarised in Table \ref{Tes
     \label{TestResults}
 \end{table}
 
-It can be seen from the results, that only Test image 1 was able to pass all tests. Test images 2 and 3 failed some of the criteria. This is made obvious when looking at the output RHF in Table \ref{TestResults}. Test image 2 shows an unexpected result, and Test image 3 has some marginal error and is 1\% out from the expected value. This is not a major concern for Test image 3, as it is approximately correct (though the code does not recognise this), however for Test image 2 these is quite a high margin of error with RHF being approximately 13\% greater than expected. In order to verify what this may, the images were run through the python functions manually using inputs from Table \ref{tab:TestImageTable} to see the hough transform output. This is shown in Figure for Test images 2 and 3.
+It can be seen from the results, that only Test image 1 was able to pass all tests. Test images 2 and 3 failed some of the criteria. This is made obvious when looking at the output RHF in Table \ref{TestResults}. Test image 2 shows an unexpected result, and Test image 3 has some marginal error and is 1\% out from the expected value. This is not a major concern for Test image 3, as it is approximately correct (though the code does not recognise this), however for Test image 2 these is quite a high margin of error with RHF being approximately 13\% greater than expected. In order to verify what this may, the images were run through the python functions manually using inputs from Table \ref{tab:TestImageTable} to see the hough transform output. This is shown in Figure \ref{TestImagesProcessed} for Test images 2 and 3.
 
 %I cant seem to get latex to detect these figures but they are in the right area?
 \begin{figure}
     \centering
-    \subfloat[Test image 2 processed]{\includegraphics[width=0.4\textwidth]{Figures/test2_processed.png}}
+    \subfloat[Test image 2 processed]{\includegraphics[width=0.4\textwidth]{Figures/test2_processsed.png}}
     \hfill
-    \subfloat[Test image 3 processed]{\includegraphics[width=0.4\textwidth]{Figures/test3_processed.png}}
+    \subfloat[Test image 3 processed]{\includegraphics[width=0.4\textwidth]{Figures/test3_processsed.png}}
     \caption{Test images run through hough\_measurebox using default inputs, some noise is seen from the binary thresholding which highlights a problem.}
     \label{TestImagesProcessed}
 \end{figure}
+
+One of the image processing stages (likely the binary thresholding stage, as gaussian blurring was eliminated using $\sigma$=0) has generated some \textit{noise} or \textit{pixel artefacts} on the fake hydride objects in the images. This can be seen in both images, Figure \ref{TestImagesProcessed} a and b, of 64 and 300 square pixel size. However, it has had a larger effect on the smaller image, as any introduced small objects from noise or error will have greater effect. In Test image 2, there are 2 smaller objects which have been effectively broken off the main objects by the noise which leads to smaller hydrides which could be orientated in any direction according to the code. This could lead the hough transform to interpret these as being aligned perpendicular to the intended test hydride direction (circumferential), hence there is a deviation in the RHF leading to the error. In Test image 3, this has had a very slight effect due to the main object size dominating RHF, hence it has only deviated by ~1\%. 
+
+These observed effects however do highlight a major problem in the image processing binary threshold stage or the nature of the test, which could be an effect of simple manual thresholding. In this case the threshold was set to 0, and as values of true black in hex code or RGB code (from ImageJ) are all 0's, this should have been interpreted as 0 in \textit{skblur} and \textit{skbinary} and the threshold applied on any non-black pixels. Here some pixels were obviously interpretted as greater than 0 despite they should be read as 0 values. This may have been an issue with the image production method using ImageJ drawing software, to verify this, Test Image 2 was read into \textit{skbinary} manually and the histogram was observed, it displayed that there was a small distribution of values around pixel intensity 0 and 255, not just the 2 polarised values. So ideally if the threshold was set properly, each object would be fully binarised and the automatic tests would have passed on each image. However, this may not be a good approach as the test images would have to be viewed, read in and analysed manually first to see what threshold and blurring parameters should be applied to "optimise" their condition for the hough line transform and RHF analysis tests. This partially eliminates the purpose of the automatic testing, and it may introduce some bias to the testing parameters. It is thought that it may be better to set up a test with default or expected parameters first, view the outcome and then attempt to learn and adjust code from there rather than the former. This however does highlight opportunities for future work in the area regarding the binary thresholding method and the automatic testing approach.
+
+
 
 \section{Conclusions}
 \subsection{On Hydride Structure Analysis}
