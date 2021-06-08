@@ -13,7 +13,8 @@
 	
 	\begin{center} \textit{This report details progress made during the Research Software \& Engineering in Python module, in which image processing techniques are utilised to automatically analyse micrograph images of zirconium hydride (H\textsubscript{4}Zr) structures in samples of metallic zirconium. Explanation of the method, including relevant images and discussion of code elements are included.} \end{center}
 	
-	\section{Introduction}
+	\section{Introduction \& Review of Existing Literature}
+	\subsection{Background}
 	During the service lifetime of zirconium fuel cladding within a light-water reactor core, several phenomena manifest as a result of both direct neutron irradiation and chemical reactivity with the core coolant. One of the more prominent of these is the formation of zirconium hydride within the bulk material, resulting from the radiolysis of core coolant and subsequent migration of hydrogen through the lattice, which then reacts with the metal and accumulates at grain boundaries. As zirconium hydride is typically more brittle than the lattice itself, this serves to compromise the local integrity of the lattice. 
 	\\
 	\\
@@ -30,7 +31,28 @@
 	\end{figure}
 	\\
 	These micrographs may be processed using appropriate software environments to identify characteristics such as the density of hydride regions within the material, and the level to which connectivity is observed. Here, image processing techniques within the python programming environment are used to identify these properties, chiefly incorporating the \textit{scikit-image} series of algorithms along with originally-developed scripts. For this project, code is developed, implemented and tested to determine the most effective means of isolating and analysing hydride structures within the images. An account of the evolution of the techniques is given, and results are presented and discussed.
-	
+	\\
+	\subsection{Literature Review}
+	The degredation mechanics of zirconium alloys remain under review as the nuclear sector continues to improve the efficiency and safety of modern nuclear reactors. Research into the degradation of zirconium is a vital component of this research and as such there exists an extensive array of techniques under investigation for accurately predicting this degradation. Practical methods such as x-ray diffraction and resistivity assays are commonplace, however advances in computing power are placing an increased emphasis on the use of computer processing in both independent modelling and comparison with real-world observations.
+	\\
+	Image processing techniques are utilised for a wide array of different purposes owing to their versatility, reprogrammability and ease of automation. For samples such as micrographs which may exhibit minor differences between images, it is advantageous to automate the process of detecting characteristics to ensure all images are processed identically, therefore reducing systematic errors. In the context of zirconium analysis, several studies have aimed to predict failure routes and lifetime behaviour by quantifying the level and severity of microstructural damage caused by hydride plates evident within sample micrographs, achieved using a range of software packages.
+	\\
+	\\
+	P.A. Simon et al. (2021) \cite{Simon2021} have recently analysed the link between \textit{radial} hydride structures in zirconium and likelihood of eventual failure in MATLAB, and quantified results using a figure known as the \textit{radial hydride continuous path} (RHCP), which considers the geometries of hydride plates, separation distances and the probability of crack propagation through the plates (for which individual regions are assigned a weighting factor). Here, a series of algorithms were used to find the 'best path' for which crack propagation between hydrides is most likely, with micrographs exhibiting more severe crack routes (of greater total length and probability of occurrence) generating a larger value for RHCP (between 0 and 1). The study utilised micrographs of real zirconium samples, binarised and 'cleaned' to remove noise from dust and imperfections within the matrix. It is noted that the complexity of real material micrographs can present issues for many algorithms and as such techniques such as splitting the image into smaller 'bands' are sometimes necessary. The study observed that for higher values of RHCP and r\textit{radial hydride fraction} (RHF), in which greater quantities of radial hydride plates and more crack routes are present, the \textit{fracture energy}, that is, the energy input required for a total fracture to manifest, decreased substantially.
+	\\
+	RHF as a similar metric to RHCP is used within this study with the similar goal of developing a foundation for predicting the failure modes within zirconium components.
+	\\
+	\begin{figure}[h]
+		\centering
+		\subfloat[The crack route through a cladding sample is less 'direct' through the material, as migration between hydride plates is more difficult.]{\includegraphics[width=0.45\textwidth]{Figures/circ_frac.PNG}\label{fig:circ_fract}}
+		\hfill
+		\subfloat[Here, several direct crack routes can be ween in the material owing to a large quantity of radial hydrides, presenting significantly increased probability of through-wall cracking.]{\includegraphics[width=0.4\textwidth]{Figures/rad_frac.PNG}\label{fig:rad_fract}}
+		\caption{Micrographs of sections of cladding with varying hydride morphologies. The fracture route aligns more directly through the material for (b), in which a greater quantity of radially-oriented hydrides are observed. (a) exhibits more circumferentially-aligned hydrides which make crack propagation more difficult.}
+		\label{fig:rad_circ_frac}
+	\end{figure}
+	\\
+    Similarly, the fracture morphologies in oxidised samples of Zircaloy-4 have been investigated by P.A. Raynaud et al. (2012) \cite{RAYNAUD201269}.
+	\\
 	\section{Initial Image Processing}
 	\subsection{The Gaussian Blur}
 	To begin this project, a series of pre-prepared micrograph images were manipulated and several different approaches in python were tested to provide an initial understanding of the basics of image processing. Algorithms were written which could apply different threshold filters to image value arrays once they had been read into python. When the images were read by the \textit{Scikit image} package in python, they could be expressed as a numerical array with \textit{Numpy}. Threshold values can then be applied to these arrays which can convert an image to binary (black and white) based on the threshold, this requires the image to be converted to greyscale initially. 
@@ -237,13 +259,13 @@ The inputs for the \textit{hough\_measurebox} function are summarised in Table \
 \end{itemize}
 
 %WHY IS THIS TABLE MOVING?? :(
-\begin{table}
+\begin{table}[h]
 	\begin{center}
 	\begin{tabular}{ |c|c|c| } 
 		\hline
-		\multicolumn{3}{|c|}{hough\_measurebox inputs} \\
+		\multicolumn{3}{|c|}{\textbf{hough\_measurebox Inputs}} \\
 		\hline
-		Function Input & Value & Basis for Chosen Input \\
+		\textbf{Function Input} & \textbf{Value} & \textbf{Basis for Chosen Input} \\
 		\hline
 		\textit{Background value} & 1 & Always set to white. \\
 		\hline
