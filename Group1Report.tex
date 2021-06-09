@@ -44,13 +44,17 @@
 		\subfloat[The crack route through a cladding sample is less 'direct' through the material, as migration between hydride plates is more difficult.]{\includegraphics[width=0.45\textwidth]{Figures/circ_frac.PNG}\label{fig:circ_fract}}
 		\hfill
 		\subfloat[Here, several direct crack routes can be ween in the material owing to a large quantity of radial hydrides, presenting significantly increased probability of through-wall cracking.]{\includegraphics[width=0.4\textwidth]{Figures/rad_frac.PNG}\label{fig:rad_fract}}
-		\caption{Micrographs of sections of cladding with varying hydride morphologies. The fracture route aligns more directly through the material for (b), in which a greater quantity of radially-oriented hydrides are observed. (a) exhibits more circumferentially-aligned hydrides which make crack propagation more difficult.}
+		\caption{Micrographs of sections of cladding with varying hydride morphologies observed by P.A. Simon et al. (2021). The fracture route aligns more directly through the material for (b), in which a greater quantity of radially-oriented hydrides are observed. (a) exhibits more circumferentially-aligned hydrides which make crack propagation less favourable \cite{Simon2021}.}
 		\label{fig:rad_circ_frac}
 	\end{figure}
 	\\
     Similarly, the fracture morphologies in oxidised samples of Zircaloy-4 have been investigated by P.A. Raynaud et al. (2012) \cite{RAYNAUD201269}. Here, hydride orientations were characterised using image analysis to assess the effects on the fracture toughness of the cold-worked stress relieved cladding samples. The radial hydride fraction was evaluated by reducing (or 'skeletonising') and indexing all hydride structures along with their corresponding lengths and orientations. Hydrides were further defined as being either 'in-plane', 'mixed' or 'out-of-plane', representing angles of 0-40\textdegree, 40-65\textdegree, and 65-90\textdegree aligned with the hoop direction, respectively. RHF is therefore defined as a weighted average of all indexed hydride lengths and classifications. Overall, increases in RHF throughout the material were found to signifncantly reduce sample fracture toughness. In this study, the radial hydride fraction was evaluated using the Hydromorph software environment.
     \\
-    Text
+    \\
+    One more study?
+    \\
+    \\
+    As several previous studies have used various image processing techniques to assess the microstructural characteristics of sample micrographs, it is clear that there is substantial interest in using software to measure metrics relating to the orientation and quantity of hydride plates within metallic matrices. This study attempts to construct an additional route for analysing hydride morphologies using a series of software packages. The primary motivation is the prediction of damage and failure routes in zirconium alloys, which can be qualitatively related to these morphologies and used to determine which samples may be closer to a critical failure than others, and assist in developing our understanding of the effects of hydrides on the structural integrity of fuel cladding elements.
 	\\
 	\section{Initial Image Processing}
 	\subsection{The Gaussian Blur}
@@ -189,7 +193,7 @@ These values generated the following pre-processed images shown in Figure \ref{f
 	\end{figure}
 
 	\section{Initial Trial Methods to Assess Hydride Connectivity}
-	Following pre-processing, techniques were trialled in an attempt to analyse the level of connectivity between regions of H\textsubscript{4}Zr in the micrographs \cite{Sharma2018}, \cite{Simon2021}, \cite{Sunil2020}.
+	Following pre-processing, techniques were trialled in an attempt to analyse the level of connectivity between regions of H\textsubscript{4}Zr in the micrographs \cite{Simon2021}\cite{Sharma2018}\cite{Sunil2020}.
 
 	\subsection{Skeletonise function from Sci-kit Image}
 	Skeletonisation was implemented as an initial approach for obtaining a simplified path for connected hydrides. This function would theoretically reduce the hydride map to a connected graph of thin lines (approximately one pixel in thickness). Using \textit{skimage.morphology}, the skeletonise() function was tested on image ‘chu1’. From the demo code produced, an initial reading of the file from the local directory was performed followed by specifying the image size. Using \textit{skblur} and \textit {skbinary}, ‘chu1’ was binarized and blurred to give the output as shown in Figure 4a. It is interesting to note that there were different variants to the skeletonise() function. One output (Zha84) initially takes the edges of an object (a hydride in this case) and iteratively removes pixels, stopping when the neighbouring pixel is black (where the intensity is zero) \cite{ScikitimageA}. As long as the image in Figure 4 (a) is inverted, the result is a series of single white pixel lines. Another output (Lee94) uses an 'octree' data structure which is more suitable for 3D images. Like Zha84, this algorithm also performs sweeping iterations over the image where pixels are continuously removed until the condition is satisfied where two iterations produce the same image and there is no change in the pixel count \cite{ScikitimageA}. Figure ~\ref{Zha84}  and Figure~\ref{Lee94} shows the results of Zha84 and Lee94 methods respectively, which were applied to the binarised ‘chu1’image from Figure 4a.
@@ -203,7 +207,7 @@ These values generated the following pre-processed images shown in Figure \ref{f
 		\label{Skeletonise}
 	\end{figure}
 \\
-	These results, however, are unsuitable for analysing connectivity as it appears that the matrix has been identified as the object rather that the hydrides themselves. Crucially, the skeletonise function does not provide actual data which can be applied to find suitable microstructural characteristics. Therefore, it was decided to assess an alternative characteristic of the microstructure to determine the hydride characteristics (discussed later). Finally, Figure~\ref{MedialAxis} below illustrates a representation of how \textit{medial\_axis} works by identifying the edges of the hydrides and then prints a skeleton (colour map=magma) \cite{Scikitimage}. In this case the skeleton is performed on the matrix rather than the hydride, this may be because of the initial ‘chu1’ binary image array, as these values are not inverted.
+	These results, however, are unsuitable for analysing connectivity as it appears that the matrix has been identified as the object rather that the hydrides themselves. Crucially, the skeletonise function does not provide actual data which can be applied to find suitable microstructural characteristics. Therefore, it was decided to assess an alternative characteristic of the microstructure to determine the hydride characteristics (discussed later). Finally, Figure~\ref{MedialAxis} below illustrates a representation of how \textit{medial\_axis} works by identifying the edges of the hydrides and then prints a skeleton (colour map=magma) \cite{ScikitimageA}. In this case the skeleton is performed on the matrix rather than the hydride, this may be because of the initial ‘chu1’ binary image array, as these values are not inverted.
 	\\
 	\begin{figure}[h]
 		\centering
@@ -214,11 +218,16 @@ These values generated the following pre-processed images shown in Figure \ref{f
 	\\
 	\subsection{Canny Edge Detection and the Hough Line Transform}
 	
-	The \textit{Hough Line Transform} relies on the detection of pixels within a series of lines superimposed onto a sample image. Rather than a typical first-order equation $y=mx+c$, the method defines these lines as the perpendicular normal to a line of angle $\theta$ from the top-left origin. Test text
+	The \textit{Hough Line Transform} relies on the detection of pixels within a series of lines superimposed onto a sample image. An algorithm is used to plot a series of lines for which pixels within a region may coincide. A greater 'intensity' is recorded for lines that coincide a larger number of pixels, and peaks are achieved for lines with the greatest intensities (i.e. the line corresponds to a roughly linear region of pixels). Rather than a typical first-order equation $y=mx+c$, the method defines these lines as the perpendicular normal to a line of angle $\theta$ from the top-left origin, of length $r$. This places pixel regions in the co-ordinate space $(r,\theta)$ ('Hough space') as opposed to traditional cartesian co-ordinates. This is advantageous as lines may then be separated according to different values of $\theta$, as is required to compute the radial hydride fraction.
 	\\
-	\\	
-	It has been established that Hough transform is useful in detecting shapes using mathematical forms such as cartesian coordinates. For the case of straight lines, \textit{Hough space} can be used to identify the distance from the image origin to a line and the angle of the line relative to a specified axis. This description is for the OpenCV, \textit{cv2}, module which uses the ‘cv2.houghlines’ function. The main advantage of using Hough transform when put up against skeletonise is that it can return rho and theta values in a 2D array. Rho is the distance which is taken as positive if the line is above the origin and negative if the line is below the origin. Theta is the angle measured from the horizontal axis in the counter-clockwise direction. ‘Hough.transform’ uses the coordinate system (rho, theta) in a voting system \cite{OpenCV2013}. Here, a straight horizontal black line can be visualised in a white background image. If the start point of the line is at an initial value of (40, 90), ‘Hough.transform’ will detect this and begin searching the image to find matching the number of (40,90) cells. The maximum count for this cell would indicate that a line lies on this coordinate \cite{OpenCV2013}. When using the function, Canny edge detection was used to better visualise the hydrides. This function can also simply threshold and binarise an image, without allowing the user to change truncation or sigma values. After testing, the following results were given, as shown in Figure \_ (a) and (b). 
-	\\	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=2.5in]{Figures/houghtransform.PNG} 
+		\caption{A single line is plotted of distance $\rho$ (defined in this report as $r$) from the origin in the upper left corner. The angle $\theta$ is used in conjunction with $\rho$ to discern the positon and orientation of the line, which is useful in calculating a RHF value for the sample \cite{OpenCV2013}.}
+		\label{MedialAxis}
+	\end{figure}
+	It has been established that the Hough transform is useful in detecting shapes using mathematical forms such as cartesian coordinates. For the case of straight lines, Hough space can be used to identify the distance from the image origin to a line and the angle of the line relative to a specified axis. This description is for the OpenCV, \textit{cv2}, module which uses the ‘cv2.houghlines’ function. The main advantage of using Hough transform when put up against skeletonise is that it can return rho and theta values in a 2D array. Rho is the distance which is taken as positive if the line is above the origin and negative if the line is below the origin. Theta is the angle measured from the horizontal axis in the counter-clockwise direction. ‘Hough.transform’ uses the coordinate system (rho, theta) in a voting system \cite{OpenCV2013}. Here, a straight horizontal black line can be visualised in a white background image. If the start point of the line is at an initial value of (40, 90), ‘Hough.transform’ will detect this and begin searching the image to find matching the number of (40,90) cells. The maximum count for this cell would indicate that a line lies on this coordinate \cite{OpenCV2013}. When using the function, Canny edge detection was used to better visualise the hydrides. This function can also simply threshold and binarise an image, without allowing the user to change truncation or sigma values. After testing, the following results were given, as shown in Figure \_ (a) and (b).
+	\\
 	\begin{figure}[h]
 		\centering
 		\subfloat[Canny edge detection on image 'chu2']{\includegraphics[width=0.4\textwidth]{./Figures/Canny_Edge_Detection}\label{Canny}}
@@ -229,16 +238,12 @@ These values generated the following pre-processed images shown in Figure \ref{f
 	\end{figure}
 	\\
 \pagebreak
-\\
 \section{Radial Hydride Fraction to Assess Connectivity}
 \subsection{Initial Approach using Hough Line Transform}
 
-Due to difficulties in implementing a viable technique for determining the level of connectivity of hydrides within test micrographs, the focus of the project was adjusted to assist in determining the likelihood of through-wall cracking and subsequent mechanical failure of analysed zirconium samples. As previously highlighted, the rate of degradation of fuel cladding is dependent on the orientation of hydrides within the grains. However as observed many samples exhibit hydrides oriented both radially and circumferentially; a ratio is therefore needed to assess the contributions of the hydride orientations to the likelihood of failure by through-wall cracking. Known as the \textit{Radial Hydride Fraction} (RHF), this
-
-
-%in one of my older notebooks, I wrote an explanation "connectivity testing" I think it was called - I'm not sure if it directly correlates to cracking
-%Maybe we say that hydrides orientated radially are more likely of concern in cracking OR maybe you have already said that and I didn't get it :D
-
+Due to difficulties in implementing a viable technique for determining the level of connectivity of hydrides within test micrographs, the focus of the project was adjusted to assist in determining the likelihood of through-wall cracking and subsequent mechanical failure of analysed zirconium samples. As previously highlighted, the rate of degradation of fuel cladding is dependent on the orientation of hydrides within the grains. However as observed many samples exhibit hydrides oriented both radially and circumferentially; a ratio is therefore needed to assess the contributions of the hydride orientations to the likelihood of failure by through-wall cracking. Known as the \textit{Radial Hydride Fraction} (RHF) and discussed previously, this provides a measure of the proportion of hydrides oriented perpendicular to the hoop direction, thus constituting a greater risk of through-wall cracking within the sample. RHF can be loosely related to the likelihood of failure of a cladding element as the formation of radial hydrides (known as \textit{hydride reorientation}) is associated with the quantity of hydrogen within the structure as well as the circumferential orientation of stress fields, both of which are a consequence of high irradiation fluence and exist in fuel assemblies at high burnup levels \cite{Plyasov2020}. As such, samples exhibiting these effects pose a greater risk of compromise to their structural integrity.
+\\
+\\
 Initial approach, hough line transform over the whole image
 
 
@@ -306,7 +311,7 @@ In order to learn how to implement automatic testing using GitHub and Python, an
     \end{center}
 \end{figure}
 
-The test images were produced in ImageJ software, setting the background as white (a value of 255 when read into skimage) and the fake hydrides as black (0). The first 2 images were set to image size of 64 pixel squares, with approximately 40 pixel object lengths (these were drawn on with angles 90\degree and 0\degree respectively). The third image was created in the same manner, except its size was set to 300 by 300 pixels, as this is closer to the sample micrograph images assessed in the study. This image had only 1 fake hydride of 260 pixel length. These images should have Radial hydride fractions of 1.0, 0.0 and 0.0 respectively if the code functions as it should and detects only these singular objects in the hough transform.
+The test images were produced in ImageJ software, setting the background as white (a value of 255 when read into skimage) and the fake hydrides as black (0). The first 2 images were set to image size of 64 pixel squares, with approximately 40 pixel object lengths (these were drawn on with angles 90\textdegree and 0\textdegree respectively). The third image was created in the same manner, except its size was set to 300 by 300 pixels, as this is closer to the sample micrograph images assessed in the study. This image had only 1 fake hydride of 260 pixel length. These images should have Radial hydride fractions of 1.0, 0.0 and 0.0 respectively if the code functions as it should and detects only these singular objects in the hough transform.
 
 Based on this, a testing procedure was proposed which sets a number of criteria that pytest would be able to test the images against using the \textit{assert} command. For \textbf{Test image 1}, a wholely radially orientated image, this cycled through:
 
@@ -352,7 +357,7 @@ influence of peak number on RHF - 1, 5, 10 - greater detect-ability of objects w
 
 Noise as top \& bottom of image does influence results - larger objects are created and detected as being large hydrides.
 
-\subsection{Automatic Testing Pytest Results}
+\subsection{Automatic Testing; Pytest Results}
 The output of the tests produced by the Git workflow as summarised in Table \ref{TestResults}.
 
 \begin{table}[h]
