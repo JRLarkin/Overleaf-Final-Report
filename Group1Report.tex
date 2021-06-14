@@ -30,7 +30,7 @@
 	These micrographs may be processed using appropriate software environments to identify characteristics such as the density of hydride regions within the material, the specific orientations of the hydrides, and the level to which connectivity is observed. Here, image processing techniques within the python programming environment are used to identify these properties, chiefly incorporating the \textit{scikit-image} series of algorithms along with originally-developed scripts. For this project, code is developed, implemented and tested to determine the most effective means of isolating and analysing hydride structures within the images. An account of the evolution of the techniques is given, and results are presented and discussed.
 	\\
 	\subsection{Literature Review}
-	The degredation mechanics of zirconium alloys remain under review as the nuclear sector continues to improve the efficiency and safety of modern nuclear reactors. Research into the degradation of zirconium is a vital component of this research and as such there exists an extensive array of techniques under investigation for accurately predicting this degradation. Practical methods such as x-ray diffraction and resistivity assays are commonplace, however advances in computing power are placing an increased emphasis on the use of computer processing in both independent modelling and comparison with real-world observations.
+	The degradation mechanics of zirconium alloys remain under review as the nuclear sector continues to improve the efficiency and safety of modern nuclear reactors. Research into the degradation of zirconium is a vital component of this research and as such there exists an extensive array of techniques under investigation for accurately predicting this degradation. Practical methods such as x-ray diffraction and resistivity assays are commonplace, however advances in computing power are placing an increased emphasis on the use of computer processing in both independent modelling and comparison with real-world observations.
 	\\
 	Image processing techniques are utilised for a wide array of different purposes owing to their versatility, reprogrammability and ease of automation. For samples such as micrographs which may exhibit minor differences between images, it is advantageous to automate the process of detecting characteristics to ensure all images are processed identically, therefore reducing systematic errors. In the context of zirconium analysis, several studies have aimed to predict failure routes and lifetime behaviour by quantifying the level and severity of microstructural damage caused by hydride plates evident within sample micrographs, achieved using a range of software packages.
 	\\
@@ -54,28 +54,37 @@
     One more study?
     \\
     \\
-    As several previous studies have used various image processing techniques to assess the microstructural characteristics of sample micrographs, it is clear that there is substantial interest in using software to measure metrics relating to the orientation and quantity of hydride plates within metallic matrices. This study attempts to construct an additional route for analysing hydride morphologies using a series of software packages. The primary motivation is the prediction of damage and failure routes in zirconium alloys, which can be qualitatively related to these morphologies and used to determine which samples may be closer to a critical failure than others, and assist in developing our understanding of the effects of hydrides on the structural integrity of fuel cladding elements.
+    As several previous studies have used various image processing techniques to assess the microstructural characteristics of sample micrographs, it is clear that there is substantial interest in using software to measure metrics relating to the orientation and quantity of hydride plates within metallic matrices. This study attempts to construct an additional route for analysing hydride morphologies using a series of software packages in Python. The primary motivation is the prediction of damage and failure routes in zirconium alloys, which can be qualitatively related to these morphologies and used to determine which samples may be closer to a critical failure than others, and assist in developing our understanding of the effects of hydrides on the structural integrity of fuel cladding elements.
 	\\
 	\section{Initial Image Processing}
 	\subsection{The Gaussian Blur}
-	To begin this project, a series of pre-prepared micrograph images were manipulated and several different approaches in python were tested to provide an initial understanding of the basics of image processing. Algorithms were written which could apply different threshold filters to image value arrays once they had been read into python. When the images were read by the \textit{Scikit image} package in python, they could be expressed as a numerical array with \textit{Numpy}. Threshold values can then be applied to these arrays which can convert an image to binary (black and white) based on the threshold, this requires the image to be converted to greyscale initially. 
+	\subsubsection{Gaussian blur theory and approach}
+	To begin this project, a series of pre-prepared micrograph images were manipulated and several different approaches in python were tested to provide an initial understanding of the basics of image processing. Algorithms were written which could apply different threshold filters to image value arrays once they had been read into python. When the images were read by the \textit{Scikit image} package in python, they could be expressed as a numerical array with \textit{Numpy}. Threshold values can then be applied to these arrays which can convert an image to binary (black and white) based on the threshold, this requires the image to be converted to greyscale initially.
+	\\
+	\\
 	Although initial scripts succeeded in removing the zirconium matrix and isolating the hydride regions, a significant quantity of noise was observed caused by aberrations in the original images, this may have arised from sample pitting during electropolishing or foreign contaminants on the material or in the microscope used to take the image. As these aberrations manifested at similar pixel intensities to the hydrides themselves, filtering techniques were not able to eliminate them. Therefore, a \textit{blurring} technique was applied prior to intensity filtering in an attempt to remove the noise artefacts.
 	\\
 	\\
 	Here, the function \textit{cv.GaussianBlur()} is utilised, in which a convolution of a Gaussian function is applied to the pixel intensities within a region to be blurred. Although this results in a slight aberration of boundaries for well-defined regions such as hydrides, the effect is minimal due to the relatively large quantities of both black and white pixels either side of the boundary. However, for small scale regions such as several black pixels against a white background (typical of micrograph noise), the technique is highly effective as the small quantity of black pixels tends to disappear when averaged around a large white surround. Figure~\ref{fig:blur_notblur} highlights the removal of artefacts for an initial example micrograph. Upon testing, this technique proved effective for all trialled images.
-	\\
+    
+	\begin{figure}[h]
+	    \centering
+	    \includegraphics{Figures/blurred_chu1.jpg}
+	    \caption{An example of the \textit{Scikit image} gaussian blurring applied to Figure \ref{fig:tem_hydride_eg} with inputs from Table \ref{tab:imageprocessing}}
+	    \label{fig:blur_chu1}
+	\end{figure}
+	
 	\begin{figure}[h]
 		\centering
 		\subfloat[The binarised micrograph without application of Gaussian blurring.]{\includegraphics[width=0.4\textwidth]{Figures/not_blurred}\label{blur_notblur1}}
 		\hfill
 		\subfloat[The same micrograph with Gaussian blurring applied prior to filtering.]{\includegraphics[width=0.4\textwidth]{Figures/blurred}\label{fig:blur_notblur2}}
-		\caption{Comparison between identical micrographs both with and without the application of a Gaussian blur algorithm.}
+		\caption{Comparison between Figure \ref{fig:blur_chu1} which has been thresholded, both with and without the application of a Gaussian blur algorithm (un-optimised inputs).}
 		\label{fig:blur_notblur}
 	\end{figure}
-	\\
-	\textbf{Gaussian blur theory}
-	\\
+	
 	The Gaussian blur is typically used to smooth boundaries in an image where an immediate change in pixel intensity is observed compared to neighbouring pixels. The function typically employs a square matrix of values known as a \textit{kernel}. This kernel is 'superimposed' over the individual pixel values by an algorithm in a \textit{raster} pattern and alters their intensity accordingly.
+	
 	\[
 	\frac{1}{16}
 	\begin{bmatrix} 
@@ -93,16 +102,19 @@
 		0 & 13 & 178 & 242 & 136 & 44 & 9\\
 	\end{bmatrix}
 	\]
+	
 	The above example depicts a 3$\times$3 Gaussian blur kernel, although larger dimensions such as 5$\times$5 may also be used. The binary image (represented here by a 7$\times$6 matrix of pixel intensities) is \textit{convoluted} through a specific matrix operation. This alters the pixel intensities of the filtered image as weighted by the values in the kernel. There are two possible ways to adjust the level to which the image is filtered; by increasing the dimensions of the kernel, which increases the range over which the intensities are averaged, or by adjusting the values in the kernel to provide a greater or letter degree of filtering. Each route provides its own merits and drawbacks.
 	\\
-	\\
+	
+	\subsubsection{Gaussian blur methodology}
 	In the context of this report, both routes to alter the Gaussian mask were trialled. The method proposed by S. Khan involved using a module named \textit{OpenCV}, which is a cross-platform open source module that focuses on image processing techniques such as as greyscale to binary conversion, Gaussian and median blurring, filtering and thresholding. One approach of clarifying hydrides in the zirconium matrix was to initially blur and remove noise from the image followed by application of a pixel filter value as a method of binarising (i.e. identifying a threshold value between 0 and 255). The idea behind this approach was to allow a user to specify threshold and kernel blur values by calling a single function, \textit{image\_conv}, which would display a clear binarised image with applied Gaussian blur. A before and after histogram is also displayed to show how the previous 8-bit image is filtered to a binary image with 0 and 255 as integer values. Image blur was increased by altering the dimensions of the mask overlaying the micrograph image. This served to significantly reduce the noise observed in Figure \ref{blur_notblur1}, however the method relies primarily on an odd-integer input to specify square dimensions of 1,3,5..., etc. This can reduce the versatility of the technique as it limits control over the amount of blurring achieved for a specific region of pixels. 
 	\\
 	\\
-	A. Hanson proposed a similar technique but instead utilising the \textit{Scikit image} or \textit{skimage} package. In this method the values within the Gaussian blur are adjusted through the use of altering the standard deviation from the mean used by the filter. Here, a larger specified value for $\sigma$ will produce a larger range of values within the kernel and generate a more intense blurring, whilst lower $\sigma$ values will generate higher \textit{relative} pixel intensities at the fringes of the kernel and thus reduce the level of blurring, see Figure \ref{fig:chu1gauss} (after binary thresholding). It was thought that this method proposed was more suited for the purpose of this study, as python code written in skimage allowed the gaussian blur $\sigma$ to be adjusted individually for each image.
+	A. Hanson proposed a similar technique but instead utilising the \textit{Scikit image} or \textit{skimage} package. In this method the values within the Gaussian blur are adjusted through the use of altering the standard deviation from the mean used by the filter. Here, a larger specified value for $\sigma$ will produce a larger range of values within the kernel and generate a more intense blurring, whilst lower $\sigma$ values will generate higher \textit{relative} pixel intensities at the fringes of the kernel and thus reduce the level of blurring, see Figure \ref{fig:chu1gauss} (after binary thresholding). It was thought that this method proposed was more suited for the purpose of this study, as python code written in skimage allowed the gaussian blur $\sigma$ to be adjusted individually for each image. So this was the approach taken forward.
 	
-	Using this approach, a function carries out the gaussian blur on an image array that has been read into python via \textit{skimage}, then the sigma values from the middle column of Table \ref{tab:imageprocessing} are specified in each case. There was also an additional input, \textit{truncation} value, which truncates the gaussian filter after the set amount of standard deviations. This was kept at a constant value of 3 throughout the study, as this was the default value recommended in skimage and also data within $3\sigma$'s accounts for 99.9\% of the data concerned. After this, images were ready for binary thresholding in the next function.
-	\begin{figure}[h]
+	Here a function carries out the gaussian blur on an image array that has been read into python via \textit{skimage}, then the sigma values from the middle column of Table \ref{tab:imageprocessing} are specified in each case. There was also an additional input, \textit{truncation} value, which truncates the gaussian filter after the set amount of standard deviations. This was kept at a constant value of 3 throughout the study, as this was the default value recommended in skimage and also data within $3\sigma$'s accounts for 99.9\% of the data concerned. An example of this effect can be seen in Figure \ref{fig:blur_chu1}, as applied to the image from Figure \ref{fig:tem_hydride_eg}. After this, images were ready for binary thresholding in the next function.
+	
+	\begin{figure}[H]
 		\centering
 		\subfloat[Image 'chu1' filtered using a Gaussian mask where $\sigma$=0.5]{\includegraphics[width=0.4\textwidth]{Figures/chu1_s05_t04.jpg}\label{chu1_s05_t04}}
 		\hfill
@@ -115,17 +127,24 @@
 	Applying the same parameters in a Gaussian filter to different images tends to yield largely different results for the quantity of noise reduction in a range of images. In the sample image set provided for this investigation, many optical micrographs exhibited a high degree of peripheral darkening, which leads to difficulties in applying an effective intensity threshold without suffering losses to the visible hydrides. As such, a threshold and standard deviation must be manually agreed upon for each image to ensure maximum hydride retention whilst eliminating a sufficient quantity of noise. This presents a significant limitation of the approach as large quantities of micrographs may become time-intensive to analyse. In addition, the systematic removal of small hydride regions may generate a significant source of error when cross-comparing images. Practically, this can cause an over- or underestimation of hydride quantity within a sample and difficulties may arise in subsequent connectivity analysis.
 	\\ 
 	\\
-	For the sample set of images; \textit{chu1, chu2, chu3, chu7, chu11}, threshold and filter values (namely $=\sigma$) were agreed upon based on their perceived effectiveness as follows. Thresholding is a very simple operation and is applied with a simple python function that reads in the previously blurred image array, plots a respective histogram of it's pixel intensity values, and then applies the following operation, based on the specified threshold;
+	For the sample set of images; \textit{chu1, chu2, chu3, chu7, chu11}, threshold and filter values (namely $=\sigma$) were agreed upon based on their perceived effectiveness as follows. This series of images was selected, as they provided a series of different hydride morphologies for analysis. Thresholding is a very simple operation when done manually, it was applied with a simple python function that reads in the previously blurred image array, plots a respective histogram of it's pixel intensity values, and then applies the following operation, based on the specified threshold;
 	\begin{center}
 		In respective image array: $ value > threshold = true $
 	\end{center}
-	This sets any values in the image array greater than said threshold to true, numpy in python is then able to interpret this and convert this to an integer array of 1's and 0's which produces the binary images as displayed further on. In this case, a value of 1 is equal to white, when read in by skimage.
-	\\
-	\\
-	Threshold values could be experimented with by simply running the code, viewing the histogram and going back to change the threshold to a more optimal value appropriately. Two sets of parameters were selected for each image conversion to highlight the effect of gaussian blurring and thresholding on the output images. This was done after some experimentation to find the appropriate range of values to find a satisfactory output image. 
+	This sets any values in the image array greater than said threshold to true, numpy in python is then able to interpret this and convert this to an integer array of 1's and 0's which produces the binary images as displayed further on. In this case, a value of 1 is equal to white, when read in by skimage. An example of what this would look like in the code is displayed in Figure \ref{skbinary}.
 	
-	As such, the images filtered with the lower set of values are referred to as \textit{low-pass} (LP) and those filtered through higher values are denoted \textit{high-pass} (HP), see Table \ref{tab:imageprocessing}. It was decided to proceed to analysis with the low-pass binary images produced in an effort to reduce both excessive noise and excessive hydride omission.
+	\begin{figure}[h]
+	    \centering
+	    \includegraphics[scale=0.5]{Figures/chu1_skbinary.png}
+	    \caption{A screenshot of the binary thresholding function output with selected threshold and intensity histrogram, as applied to chu 1. Dimensions of the image in pixels can be seen.}
+	    \label{skbinary}
+	\end{figure}
+	
+	With the manual approach in python, threshold values could be experimented with by simply running the written code, viewing the histogram and going back to change the threshold to a more optimal value appropriately. However this is subjective, parameters were chosen based on what was deemed to be best for the application. A number of other threshold methods were investigated in skimage before choosing the manual approach, though it was found that these were too difficult to optimise for the purpose and the simple manual method was sufficient. Examples of different binary filters can be seen in Figure \ref{fig:skimage_threshold} in the appendix.
 	\\
+	\\
+	Two sets of parameters were selected for each image conversion to highlight the effect of gaussian blurring and thresholding on the output images. This was done after some experimentation to find the appropriate range of values to find a satisfactory output image. As such, the images filtered with the lower set of values are referred to as \textit{low-pass} (LP) and those filtered through higher values are denoted \textit{high-pass} (HP), see Table \ref{tab:imageprocessing}.Examples of all these output images can be seen in Figure \ref{fig:combined_thresholds} for comparison purposes.
+	
 	\begin{table}[ht]
 	\begin{center}
 	\begin{tabular}{ |c|c|c|c| } 
@@ -159,10 +178,9 @@
 	\label{tab:imageprocessing}
 	\end{center}
 	\end{table}
-	\\
-These values generated the following pre-processed images shown in Figure \ref{fig:chu11LPHP}. It can be seen that the HP images have introduced much more noise and darkened areas, which warps the size of the hydrides.
+	
+    These values generated the following pre-processed images shown in Figure \ref{fig:combined_thresholds}. It can be seen that the HP images have introduced much more noise and darkened areas, which warps the size of the hydrides - losing some definition. Due to this it was decided to proceed to analysis with the low-pass binary images produced in an effort to reduce both excessive noise and excessive hydride omission.
 
-%Is there an overall label for the combined figure? I dont know how to add it properly ~alex
 	\begin{figure}[H]
 		\centering
 		\subfloat[\textit{chu1(LP)}: $\sigma$=0.5, T=0.4]{\includegraphics[width=0.4\textwidth]{Figures/chu1_binary3_sigma05_thres04.jpg}\label{chu1LP}}
@@ -190,6 +208,7 @@ These values generated the following pre-processed images shown in Figure \ref{f
 		\subfloat[\textit{chu11(HP)}: $\sigma$=1.0, T=0.5]{\includegraphics[width=0.4\textwidth]{Figures/chu11_binary3_sigma1_thres05.jpg}\label{chu11HP}}
 		\label{fig:chu11LPHP}
 		\caption{Pre-processed micrographs from the sample image set. Two images with differing threshold and $\sigma$ values are included for each micrograph.}
+		\label{fig:combined_thresholds}
 	\end{figure}
 
 	\section{Initial Trial Methods to Assess Hydride Connectivity}
@@ -197,7 +216,7 @@ These values generated the following pre-processed images shown in Figure \ref{f
 
 	\subsection{Skeletonise function from Sci-kit Image}
 	Skeletonisation was implemented as an initial approach for obtaining a simplified path for connected hydrides. This function would theoretically reduce the hydride map to a connected graph of thin lines (approximately one pixel in thickness). Using \textit{skimage.morphology}, the skeletonise() function was tested on image ‘chu1’. From the demo code produced, an initial reading of the file from the local directory was performed followed by specifying the image size. Using \textit{skblur} and \textit {skbinary}, ‘chu1’ was binarized and blurred to give the output as shown in Figure 4a. It is interesting to note that there were different variants to the skeletonise() function. One output (Zha84) initially takes the edges of an object (a hydride in this case) and iteratively removes pixels, stopping when the neighbouring pixel is black (where the intensity is zero) \cite{ScikitimageA}. As long as the image in Figure 4 (a) is inverted, the result is a series of single white pixel lines. Another output (Lee94) uses an 'octree' data structure which is more suitable for 3D images. Like Zha84, this algorithm also performs sweeping iterations over the image where pixels are continuously removed until the condition is satisfied where two iterations produce the same image and there is no change in the pixel count \cite{ScikitimageA}. Figure ~\ref{Zha84}  and Figure~\ref{Lee94} shows the results of Zha84 and Lee94 methods respectively, which were applied to the binarised ‘chu1’image from Figure 4a.
-\\
+
 	\begin{figure}[h]
 		\centering
 		\subfloat[Zha84 method of skeletonisation applied to 'chu1'.]{\includegraphics[width=0.4\textwidth]{./Figures/Skeletonised_Chu1}\label{Zha84}}
@@ -206,7 +225,7 @@ These values generated the following pre-processed images shown in Figure \ref{f
 		\caption{Processing image 'chu1' with two skeletonisation methods. }
 		\label{Skeletonise}
 	\end{figure}
-\\
+
 	These results, however, are unsuitable for analysing connectivity as it appears that the matrix has been identified as the object rather that the hydrides themselves. Crucially, the skeletonise function does not provide actual data which can be applied to find suitable microstructural characteristics. Therefore, it was decided to assess an alternative characteristic of the microstructure to determine the hydride characteristics (discussed later). Finally, Figure~\ref{MedialAxis} below illustrates a representation of how \textit{medial\_axis} works by identifying the edges of the hydrides and then prints a skeleton (colour map=magma) \cite{ScikitimageA}. In this case the skeleton is performed on the matrix rather than the hydride, this may be because of the initial ‘chu1’ binary image array, as these values are not inverted.
 	\\
 	\begin{figure}[h]
@@ -241,10 +260,37 @@ These values generated the following pre-processed images shown in Figure \ref{f
 \section{Radial Hydride Fraction to Assess Connectivity}
 \subsection{Initial Approach using Hough Line Transform}
 
-Due to difficulties in implementing a viable technique for determining the level of connectivity of hydrides within test micrographs, the focus of the project was adjusted to assist in determining the likelihood of through-wall cracking and subsequent mechanical failure of analysed zirconium samples. As previously highlighted, the rate of degradation of fuel cladding is dependent on the orientation of hydrides within the grains. However as observed many samples exhibit hydrides oriented both radially and circumferentially; a ratio is therefore needed to assess the contributions of the hydride orientations to the likelihood of failure by through-wall cracking. Known as the \textit{Radial Hydride Fraction} (RHF) and discussed previously, this provides a measure of the proportion of hydrides oriented perpendicular to the hoop direction, thus constituting a greater risk of through-wall cracking within the sample. RHF can be loosely related to the likelihood of failure of a cladding element as the formation of radial hydrides (known as \textit{hydride reorientation}) is associated with the quantity of hydrogen within the structure as well as the circumferential orientation of stress fields, both of which are a consequence of high irradiation fluence and exist in fuel assemblies at high burnup levels \cite{Plyasov2020}. As such, samples exhibiting these effects pose a greater risk of compromise to their structural integrity.
-\\
-\\
-Initial approach, hough line transform over the whole image
+    Due to difficulties in implementing a viable technique for determining the level of connectivity of hydrides within test micrographs, the focus of the project was adjusted to assist in determining the likelihood of through-wall cracking and subsequent mechanical failure of analysed zirconium samples. As previously highlighted, the rate of degradation of fuel cladding is dependent on the orientation of hydrides within the grains. However as observed many samples exhibit hydrides oriented both radially and circumferentially; a ratio is therefore needed to assess the contributions of the hydride orientations to the likelihood of failure by through-wall cracking. Known as the \textit{Radial Hydride Fraction} (RHF) and discussed previously, this provides a measure of the proportion of hydrides oriented perpendicular to the hoop direction, thus constituting a greater risk of through-wall cracking within the sample. RHF can be loosely related to the likelihood of failure of a cladding element as the formation of radial hydrides (known as \textit{hydride reorientation}) is associated with the quantity of hydrogen within the structure as well as the circumferential orientation of stress fields, both of which are a consequence of high irradiation fluence and exist in fuel assemblies at high burnup levels \cite{Plyasov2020}. As such, samples exhibiting these effects pose a greater risk of compromise to their structural integrity.
+    \\
+    \\
+    Simon et al. 2021 \cite{Simon2021} comprehensively discussed RHF, and defined it as a widely used metric to quantify hydride morphology with many specific formulas. Though generally it may be expressed as defined by Colas at el. 2013 \cite{Colas2013}:
+    
+    \begin{equation}
+        RHF = \frac{\sum_i(L_i f_i)}{\sum_i{L_i}}
+        
+    \label{equ:RHF}
+    \end{equation}
+    
+    Where $f_i$ is:
+    
+    %NEED HELP WITH FORMATTING THIS
+    \begin{equation}
+        \begin{aligned}
+        \\
+        f_i = 0;  0^{\circ} \leq \theta \leq 40^{\circ},\\
+        
+        f_i = 0.5;  40^{\circ} \leq \theta \leq 65^{\circ},\\
+        
+        f_i = 1.0; 65^{\circ} \leq \theta \leq 90^{\circ},
+        \end{aligned}
+    \end{equation}
+    
+    Theta corresponds to the angle relative to the circumferential direction, where $\theta = 0^{\circ}$, is said direction and $\theta = 90^{\circ}$ would be the radial direction. A limitation here is that since the metric does not differentiate between hydrides between these angle ranges, some morphologies may be classified as having the same RHF and the same behaviour. Though as this report seeks to qualitatively assess hydride connectivity with image processing in a simple manner, more advanced classification may be out of the scope of this study.
+    
+    With this, a method then needs to be pursued which is able to object size or length and the angle of said object in respect to either axis or direction. 
+    \\
+    \\
+    Initial approach, hough line transform over the whole image
 
 
 \subsection{Refined Approach}
@@ -288,10 +334,10 @@ The inputs for the \textit{hough\_measurebox} function are summarised in Table \
 \end{table}
 
 \subsection{Implementing Automatic Testing}
-In order to learn how to implement automatic testing using GitHub and Python, and to check reliability of the analysis of the code in this study, automatic testing was implemented. This was done using the Python Application GitHub action in Git workflows, utilising the \textit{pytest} package. As it is difficult to automatically test the image processing steps of the study, it was thought to assess the the analysis of RHF as this is a quantity that can be somewhat predicted. So a methodology was proposed to produce a number of "test hydride" images which had a known radial hydride fraction, or in this case approximately estimated based on the previously explained criteria of RHF. Figures \ref{TestImages64} and \ref{TestImage300} below shows the test images created.
+    In order to learn how to implement automatic testing using GitHub and Python, and to check reliability of the analysis of the code in this study, automatic testing was implemented. This was done using the Python Application GitHub action in Git workflows, utilising the \textit{pytest} package. As it is difficult to automatically test the image processing steps of the study, it was thought to assess the the analysis of RHF as this is a quantity that can be somewhat predicted. So a methodology was proposed to produce a number of "test hydride" images which had a known radial hydride fraction, or in this case approximately estimated based on the previously explained criteria of RHF. Figures \ref{TestImages64} and \ref{TestImage300} below shows the test images created.
 
-%is there a way to neaten out this hspace without a hfill ??
-\begin{figure}[h]
+    %is there a way to neaten out this hspace without a hfill ??
+    \begin{figure}[H]
 		\begin{center}
 		\subfloat[Test image 1, 64 by 64 pixels, with 3 radially orientated false hydrides]{\includegraphics[width=0.2\textwidth]{./Figures/Test_1.jpg}
 		\label{TestImage1}}
@@ -303,51 +349,52 @@ In order to learn how to implement automatic testing using GitHub and Python, an
 		\end{center}
 	\end{figure}
 
-\begin{figure}[h]
+    \begin{figure}[H]
+        \begin{center}
+        \includegraphics[width=2.0in]{Figures/Test_3.jpg} 
+        \caption{Test image 3, 300 by 300 pixels, with a single circumferential hydride.}
+        \label{TestImage300}
+        \end{center}
+    \end{figure}
+
+    The test images were produced in ImageJ software, setting the background as white (a value of 255 when read into skimage) and the fake hydrides as black (0). The first 2 images were set to image size of 64 pixel squares, with approximately 40 pixel object lengths (these were drawn on with angles 90\textdegree and 0\textdegree respectively). The third image was created in the same manner, except its size was set to 300 by 300 pixels, as this is closer to the sample micrograph images assessed in the study. This image had only 1 fake hydride of 260 pixel length. These images should have Radial hydride fractions of 1.0, 0.0 and 0.0 respectively if the code functions as it should and detects only these singular objects in the hough transform.
+    \\
+    \\
+    Based on this, a testing procedure was proposed which sets a number of criteria that pytest would be able to test the images against using the \textit{assert} command. For \textbf{Test image 1}, a wholely radially orientated image, this cycled through:
+
     \begin{center}
-    \includegraphics[width=2.0in]{Figures/Test_3.jpg} 
-    \caption{Test image 3, 300 by 300 pixels, with a single circumferential hydride.}
-    \label{TestImage300}
+        Test 1: $assert\:RHF > 0.8$ \newline
+        Test 2: $assert\:RHF > 0.9$ \newline
+        Test 3: $assert\:RHF == 1.0$ \newline
     \end{center}
-\end{figure}
 
-The test images were produced in ImageJ software, setting the background as white (a value of 255 when read into skimage) and the fake hydrides as black (0). The first 2 images were set to image size of 64 pixel squares, with approximately 40 pixel object lengths (these were drawn on with angles 90\textdegree and 0\textdegree respectively). The third image was created in the same manner, except its size was set to 300 by 300 pixels, as this is closer to the sample micrograph images assessed in the study. This image had only 1 fake hydride of 260 pixel length. These images should have Radial hydride fractions of 1.0, 0.0 and 0.0 respectively if the code functions as it should and detects only these singular objects in the hough transform.
+    For \textbf{Test images 2 and 3}, similar criteria were set but reversed as the fake hydrides were orientated in the circumferential direction, as follows:
+    \begin{center}
+        Test 1: $assert\:RHF < 0.2$ \newline
+        Test 2: $assert\:RHF < 0.1$ \newline
+        Test 3: $assert\:RHF == 0.0$ \newline 
+    \end{center}
 
-Based on this, a testing procedure was proposed which sets a number of criteria that pytest would be able to test the images against using the \textit{assert} command. For \textbf{Test image 1}, a wholely radially orientated image, this cycled through:
+    These criteria would allow users to see if a test image fell into the expected RHF range depending how it is orientated, and then finally it can be checked to see if the function is truly accurate by assessing whether RHF is equal to 1.0 or 0.0.  However before doing this the images must be pre-processed similarly to the micrographs analysed in the study, which means running them through \textit{skblur} and \textit{skbinary} in the test code. To minimise the effect that these may have, they were run with specified inputs shown in Table \ref{tab:TestImageTable}. A Gaussian blur sigma and binary threshold of 0 is used, to produce no blurring and to set any image objects to binary pixels.
 
-\begin{center}
-    Test 1: $assert\:RHF > 0.8$ \newline
-    Test 2: $assert\:RHF > 0.9$ \newline
-    Test 3: $assert\:RHF == 1.0$ \newline
-\end{center}
-
-For \textbf{Test images 2 and 3}, similar criteria were set but reversed as the fake hydrides were orientated in the circumferential direction, as follows:
-\begin{center}
-    Test 1: $assert\:RHF < 0.2$ \newline
-    Test 2: $assert\:RHF < 0.1$ \newline
-    Test 3: $assert\:RHF == 0.0$ \newline 
-\end{center}
-
-These criteria would allow users to see if a test image fell into the expected RHF range depending how it is orientated, and then finally it can be checked to see if the function is truly accurate by assessing whether RHF is equal to 1.0 or 0.0.  However before doing this the images must be pre-processed similarly to the micrographs analysed in the study, which means running them through \textit{skblur} and \textit{skbinary} in the test code. To minimise the effect that these may have, they were run with specified inputs shown in Table \ref{tab:TestImageTable}. A Gaussian blur sigma and binary threshold of 0 is used, to produce no blurring and to set any image objects to binary pixels.
-
-\begin{table}[h]
-    \centering
-    \begin{tabular}{|c|c|}
-    \hline
-        \textbf{Function parameter} & \textbf{Test image input}  \\
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{|c|c|}
         \hline
-        $\sigma$ (Gaussian blur) & 0.0 \\
+            \textbf{Function parameter} & \textbf{Test image input}  \\
+            \hline
+            $\sigma$ (Gaussian blur) & 0.0 \\
+            \hline
+            Gaussian Truncation Value & 3 \\
+            \hline
+            Intensity Threshold Value & 0.0 \\ 
         \hline
-        Gaussian Truncation Value & 3 \\
-        \hline
-        Intensity Threshold Value & 0 \\ 
-    \hline
-    \end{tabular}
+        \end{tabular}
     \caption{Test image pre-processing parameters used for \textit{skblur} and \textit{skbinary}.}
     \label{tab:TestImageTable}
-\end{table}
+    \end{table}
 
-After this, testing could be implemented with the criteria as explained above in each case. A separate test .py file was made for each test image, and then whenever the testing reposity was pushed or a pull request was created, the test workflow would run.
+    After this, testing could be implemented with the criteria as explained above in each case. A separate test .py file was made for each test image, and then whenever the testing reposity was pushed or a pull request was created, the test workflow would run.
 
 \section{Results and Discussion}
 \subsection{Resulting Radial Hydride Fractions}
@@ -377,23 +424,61 @@ The output of the tests produced by the Git workflow as summarised in Table \ref
     \label{TestResults}
 \end{table}
 
-It can be seen from the results, that only Test image 1 was able to pass all tests. Test images 2 and 3 failed some of the criteria. This is made obvious when looking at the output RHF in Table \ref{TestResults}. Test image 2 shows an unexpected result, and Test image 3 has some marginal error and is 1\% out from the expected value. This is not a major concern for Test image 3, as it is approximately correct (though the code does not recognise this), however for Test image 2 these is quite a high margin of error with RHF being approximately 13\% greater than expected. In order to verify what this may, the images were run through the python functions manually using inputs from Table \ref{tab:TestImageTable} to see the hough transform output. This is shown in Figure \ref{TestImagesProcessed} for Test images 2 and 3.
+    It can be seen from the results, that only Test image 1 was able to pass all tests. Test images 2 and 3 failed some of the criteria. This is made obvious when looking at the output RHF in Table \ref{TestResults}. Test image 2 shows an unexpected result, and Test image 3 has some marginal error and is 1\% out from the expected value. This is not a major concern for Test image 3, as it is approximately correct (though the code does not recognise this), however for Test image 2 these is quite a high margin of error with RHF being approximately 13\% greater than expected. In order to verify what this may, the images were run through the python functions manually using inputs from Table \ref{tab:TestImageTable} to see the hough transform output. This is shown in Figure \ref{TestImagesProcessed} for Test images 2 and 3.
 
-%I cant seem to get latex to detect these figures but they are in the right area?
-\begin{figure}
-    \centering
-    \subfloat[Test image 2 processed]{\includegraphics[width=0.4\textwidth]{Figures/test2_processsed.png}}
-    \hfill
-    \subfloat[Test image 3 processed]{\includegraphics[width=0.4\textwidth]{Figures/test3_processsed.png}}
-    \caption{Test images run through hough\_measurebox using default inputs, some noise is seen from the binary thresholding which highlights a problem.}
+    %I cant seem to get latex to detect these figures but they are in the right area?
+    \begin{figure}[h]
+        \centering
+        \subfloat[Test image 2 processed]{\includegraphics[width=0.4\textwidth]{Figures/test2_processsed.png}}
+        \hfill
+        \subfloat[Test image 3 processed]{\includegraphics[width=0.4\textwidth]{Figures/test3_processsed.png}}
+        \caption{Test images run through hough\_measurebox using default inputs, some noise is seen from the binary thresholding which highlights a problem.}
     \label{TestImagesProcessed}
-\end{figure}
+    \end{figure}
 
-One of the image processing stages (likely the binary thresholding stage, as gaussian blurring was eliminated using $\sigma$=0) has generated some \textit{noise} or \textit{pixel artefacts} on the fake hydride objects in the images. This can be seen in both images, Figure \ref{TestImagesProcessed} a and b, of 64 and 300 square pixel size. However, it has had a larger effect on the smaller image, as any introduced small objects from noise or error will have greater effect. In Test image 2, there are 2 smaller objects which have been effectively broken off the main objects by the noise which leads to smaller hydrides which could be orientated in any direction according to the code. This could lead the hough transform to interpret these as being aligned perpendicular to the intended test hydride direction (circumferential), hence there is a deviation in the RHF leading to the error. In Test image 3, this has had a very slight effect due to the main object size dominating RHF, hence it has only deviated by ~1\%. 
+    One of the image processing stages (likely the binary thresholding stage, as gaussian blurring was eliminated using $\sigma$=0) has generated some \textit{noise} or \textit{pixel artefacts} on the fake hydride objects in the images. This can be seen in both images, Figure \ref{TestImagesProcessed} a and b, of 64 and 300 square pixel size. However, it has had a larger effect on the smaller image, as any introduced small objects from noise or error will have greater effect. In Test image 2, there are 2 smaller objects which have been effectively broken off the main objects by the noise which leads to smaller hydrides which could be orientated in any direction according to the code. This could lead the hough transform to interpret these as being aligned perpendicular to the intended test hydride direction (circumferential), hence there is a deviation in the RHF leading to the error. In Test image 3, this has had a very slight effect due to the main object size dominating RHF, hence it has only deviated by ~1\%. 
 
-These observed effects however do highlight a major problem in the image processing binary threshold stage or the nature of the test, which could be an effect of simple manual thresholding. In this case the threshold was set to 0, and as values of true black in hex code or RGB code (from ImageJ) are all 0's, this should have been interpreted as 0 in \textit{skblur} and \textit{skbinary} and the threshold applied on any non-black pixels. Here some pixels were obviously interpretted as greater than 0 despite they should be read as 0 values. This may have been an issue with the image production method using ImageJ drawing software, to verify this, Test Image 2 was read into \textit{skbinary} manually and the histogram was observed, it displayed that there was a small distribution of values around pixel intensity 0 and 255, not just the 2 polarised values. So ideally if the threshold was set properly, each object would be fully binarised and the automatic tests would have passed on each image. However, this may not be a good approach as the test images would have to be viewed, read in and analysed manually first to see what threshold and blurring parameters should be applied to "optimise" their condition for the hough line transform and RHF analysis tests. This partially eliminates the purpose of the automatic testing, and it may introduce some bias to the testing parameters. It is thought that it may be better to set up a test with default or expected parameters first, view the outcome and then attempt to learn and adjust code from there rather than the former. This however does highlight opportunities for future work in the area regarding the binary thresholding method and the automatic testing approach.
-
-
+    These observed effects however do highlight a major problem in the image processing binary threshold stage or the nature of the test, which could be an effect of simple manual thresholding. In this case the threshold was set to 0, and as values of true black in hex code or RGB code (from ImageJ) are all 0's, this should have been interpreted as 0 in \textit{skblur} and \textit{skbinary} and the threshold applied on any non-black pixels. Here some pixels were obviously interpretted as greater than 0 despite they should be read as 0 values. 
+    \\
+    \\
+    This may have been an issue with the image production method using ImageJ drawing software, to verify this, Test Image 2 was read into \textit{skbinary} manually and the histogram was observed, it displayed that there was a small distribution of values around pixel intensity 0 and 255, not just the 2 polarised values. So the threshold was set properly in the next case, each object could then be fully "binarised". This was then implemented to the automatic test using new pre-processing parameters as shown in Table \ref{tab:TestImageTable2}.
+    
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{|c|c|}
+        \hline
+            \textbf{Function parameter} & \textbf{Test image input}  \\
+            \hline
+            $\sigma$ (Gaussian blur) & 0.0 \\
+            \hline
+            Gaussian Truncation Value & 3 \\
+            \hline
+            Intensity Threshold Value & 0.1 \\ 
+        \hline
+        \end{tabular}
+    \caption{Test image pre-processing parameters used for \textit{skblur} and \textit{skbinary} in the secondary test.}
+    \label{tab:TestImageTable2}
+    \end{table}
+    Following on from this change, all test were able to pass with the following results in Table \ref{TestResults2} . This verifies that the code should be working correctly to calculate RHF, despite there was some doubts about the resulting RHF's from the real sample micrographs in the results section.
+    
+    \begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|}
+    \hline
+        \textbf{Test Image} & \textbf{Tests Passed} & \textbf{Output RHF From Testing}  \\
+        \hline
+        1 & 3/3 & 1.0 \\
+        \hline
+        2 & 3/3 & 0.0 \\
+        \hline
+        3 & 3/3 & 0.00 \\
+        \hline
+    \end{tabular}
+    \caption{The output, after amending binary threshold, of the automatic testing with pytest on GitHub using test images.}
+    \label{TestResults2}
+\end{table}
+    
+    There is drawbacks to this testing approach, as the test images have to be viewed, read in and analysed manually first to see what threshold and blurring parameters should be applied to "optimise" their condition for the hough line transform and RHF analysis tests. This partially eliminates the purpose of the automatic testing, and it may introduce some bias to the testing parameters. It is thought that it may have been better to set up a test with default or expected parameters first, view the outcome and then attempt to learn and adjust code from there as opposed to the former. It would also be better to carry out testing on more complex morphology test micrographs, however this introduces issues with estimating and predicting RHF before the test. This however does highlight opportunities for future work in the area regarding the binary thresholding method and further automatic testing with python and git workflows.
 
 \section{Conclusions}
 \subsection{On Hydride Structure Analysis}
@@ -406,6 +491,15 @@ These observed effects however do highlight a major problem in the image process
 
 \newpage
 \appendix
+\section{Additional figures}
+
+\begin{figure}[h]
+	    \centering
+	    \includegraphics[scale=0.7]{Figures/skimage_thresholds.png}
+	    \caption{A range of binary thresholds that were applied in the skimage package to Chu 1, overall these were difficult to optimise and some generated excess noise.}
+	    \label{fig:skimage_threshold}
+	\end{figure}
+	
 \section{: Making the code user friendly}
 Small description on how functions were written to make the process easy for the user.
 
