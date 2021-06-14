@@ -266,77 +266,99 @@
     Simon et al. 2021 \cite{Simon2021} comprehensively discussed RHF, and defined it as a widely used metric to quantify hydride morphology with many specific formulas. Though generally it may be expressed as defined by Colas at el. 2013 \cite{Colas2013}:
     
     \begin{equation}
-        RHF = \frac{\sum_i(L_i f_i)}{\sum_i{L_i}}
-        
-    \label{equ:RHF}
+        RHF = \frac{ \sum_i{L_i f_i} }{ \sum_i{L_i} }
     \end{equation}
+    \label{equ:RHF}
     
     Where $f_i$ is:
     
-    %NEED HELP WITH FORMATTING THIS
     \begin{equation}
-        \begin{aligned}
-        \\
-        f_i = 0;  0^{\circ} \leq \theta \leq 40^{\circ},\\
-        
-        f_i = 0.5;  40^{\circ} \leq \theta \leq 65^{\circ},\\
-        
-        f_i = 1.0; 65^{\circ} \leq \theta \leq 90^{\circ},
-        \end{aligned}
+        f_i = 0; 0^{\circ} \leq \theta \leq 40^{\circ},\hspace{1cm} or = 0.5;  40^{\circ} \leq \theta \leq 65^{\circ}, \hspace{1cm} or = 1.0; 65^{\circ} \leq \theta \leq 90^{\circ}
     \end{equation}
     
     Theta corresponds to the angle relative to the circumferential direction, where $\theta = 0^{\circ}$, is said direction and $\theta = 90^{\circ}$ would be the radial direction. A limitation here is that since the metric does not differentiate between hydrides between these angle ranges, some morphologies may be classified as having the same RHF and the same behaviour. Though as this report seeks to qualitatively assess hydride connectivity with image processing in a simple manner, more advanced classification may be out of the scope of this study.
+    \\
+    \\
+    With this, a method then needs to be pursued which is able to object size or length and the angle of said object in respect to either axis or direction. This could be done by implementing the \textit{straight line hough transform}, as discussed \cite{ScikitimageB}, and \textit{measure} packages in Skimage. 
+    \\
+    \\
+    Initially a python function was developed named \textit{"hough\_measure"} which would take an input binary array, label "objects" using binary criteria in respect to the background and then perform a hough transform on these objects. The transform was always set to take place between angles $\frac{-\pi}{2}$ and $\frac{\pi}{2}$, the lines in hough space would then be plotted in terms of distance in pixels against the respective angles, producing a number of sinusoidal functions where the \textit{hough peaks} would be displayed (these are the areas that obtain the higher number of counts or votes). From this, python would then be able to interpret these peaks and plot out the respective detected hough peak lines back onto the input binary image, this should theoretically then correspond to the "connected" regions of hydrides in the image and provide corresponding angles and sizes. Such an output is shown as it would appear in python in Figure \ref{fig:hough_initial}. The function had many inputs, however they will not be discussed in detail yet as immediately a number of issues were identified in this initial hough transform approach (which is seen in the figure).
     
-    With this, a method then needs to be pursued which is able to object size or length and the angle of said object in respect to either axis or direction. 
-    \\
-    \\
-    Initial approach, hough line transform over the whole image
-
+    \begin{figure}[H]
+        \centering
+        \includegraphics[scale=0.7]{Figures/houghtrans_initial.png}
+        \caption{An example of "hough\_measure function as applied to Chu 1. It can be seen on the left that the hough peaks are difficult to identify, there are no clear brightspots (possibly due to too many peaks). Additionally on the right, many lines have been plotted and some do not seem logical.}
+        \label{fig:hough_initial}
+    \end{figure}
+    
+    Figure \ref{fig:hough_initial} shows that many potential hough lines were plotted on the first binary image; some of these lines are expected and map possible hydride paths, however other lines are clearly illogical and plot an unexpected connectivity or morphology. It is possible from the output that too many hough peaks were generated, meaning that there would be a large amount of lines plotted. In this case, not all lines have been plotted due to some limiting conditions such as minimum separating distance and angle, though it does imply that overall there were too many peaks calculated. Additionally, this approach has no way to assess individual hydride morphology or direction, only the direction and angle of the "most likely" line passing through many hydrides. So there is no way to apply the methodology from equation \ref{equ:RHF}.
+    
+    This shows that taking a hough transform over an entire labelled image in python is not appropriate, and the image must be broken up or individual objects must be isolated for proper analysis.
+   
 
 \subsection{Refined Approach}
-\textbf{Explain methodology that we use to obtain ACTUAL RHF - image slicing and the box!!!!}\\
+\textbf{Modified hough transform function using slicing}
+    
+    
+    To tackle the issue with isolating hydrides using skimage hough transform methodology, inspiration was given by Maric et al., 2021 \cite{Maric2021}. This approach uses has the same function as  described previously, though extra capability is added with \textit{SciPy ndimage} \cite{Scipy2021}. Using Scipy the labelled objects in a binary image from \textit{skimage measure} could be sliced around and treated as a separate variable in the array. Using for loops and indexing, it is then possible to carry out a hough transform on each individual identified object. This meant that each object could be identified with a boundary rectangle, and then hough peak lines could be plotted within this rectangle, which would be isolated from other objects, meaning individual hydride morphologies could be assessed. This function was named \textit{hough\_measurebox}.
+    \\
+    \\
+    The inputs for the \textit{hough\_measurebox} function are summarised in Table \ref{HoughmeasureboxInputs}. As there were many input parameters, it was decided that it would be best to have a standardised input for a reliable comparison between the resulting radial hydride fractions. As changing multiple inputs would make it impossible to make a proper comparison without extensive investigation. These inputs are based on documentation read in \cite{ScikitimageB}, which provides default and recommended values. More on the basis of choosing these is listed below:
 
-The inputs for the \textit{hough\_measurebox} function are summarised in Table \ref{HoughmeasureboxInputs}. As there were many input parameters, it was decided that it would be best to have a standardised input for a reliable comparison between the resulting radial hydride fraction of images. As changing multiple inputs would make it impossible to make a proper comparison without extensive investigation. These inputs are based on documentation read in \cite{ScikitimageB}, which provides default and recommended values. More on the basis of choosing these is listed below:
+    \begin{itemize}
+        \item \textit{Minimum distance between lines} - Adjusting this within the same order of magnitude seemed to have minimal effect, but it was not investigated in-depth.
 
-\begin{itemize}
-    \item \textit{Minimum distance between lines} - Adjusting this within the same order of magnitude seemed to have minimal effect, but it was not investigated in-depth.
+        \item \textit{Minimum angle between lines} - This seemed suitable. It has a major effect on resulting output, but changing this would need further investigation.
 
-    \item \textit{Minimum angle between lines} - This seemed suitable. It has a major effect on resulting output, but changing this would need further investigation.
+        \item \textit{Fraction} - (Minimum peak intensity) It was found that 0.5 was too high, as this would eliminate objects less than 50\% size of the maximum detected object in said slice. This may reduce some key lines.
 
-    \item \textit{Fraction} - (Minimum peak intensity) It was found that 0.5 was too high, as this would eliminate objects less than 50\% size of the maximum detected object in said slice. This may reduce some key lines.
+        \item \textit{Peak number} - This introduces large deviations in the detected lines and results, as it decides how many peaks are plotted for the given hough transform in each slice. The largest are always plotted first. 5 seemed appropriate
+    \end{itemize}
 
-    \item \textit{Peak number} - This introduces large deviations in the detected lines, as all detected peaks will be plotted. 5 seemed appropriate
-\end{itemize}
-
-%WHY IS THIS TABLE MOVING?? :(
-\begin{table}[h]
-	\begin{center}
-	\begin{tabular}{ |c|c|c| } 
-		\hline
-		\multicolumn{3}{|c|}{\textbf{hough\_measurebox Inputs}} \\
-		\hline
-		\textbf{Function Input} & \textbf{Value} & \textbf{Basis for Chosen Input} \\
-		\hline
-		\textit{Background value} & 1 & Always set to white. \\
-		\hline
-		\textit{Minimum distance between lines} & 5 & The default skimage value, seems suitable. \\ 
-		\hline
-		\textit{Minimum angle between lines} & 5 & The default in skimage, assumed to be degrees. \\
-		\hline
-		\textit{Fraction} & 0.3 & The default is 0.5 in skimage. \\ 
-		\hline
-		\textit{Peak number} & 5 & The default value is assumed maximum in skimage. \\ 
-		\hline
-	\end{tabular}
-	\caption{Inputs for the slicing hough line transform function in python, used for the analysis of each image.}
-	\label{HoughmeasureboxInputs}
-	\end{center}
-\end{table}
-
+    \begin{table}[h]
+	    \begin{center}
+	    \begin{tabular}{ |c|c|c| } 
+		    \hline
+		    \multicolumn{3}{|c|}{\textbf{hough\_measurebox Inputs}} \\
+		    \hline
+		    \textbf{Function Input} & \textbf{Value} & \textbf{Basis for Chosen Input} \\
+		    \hline
+		    \textit{Background value} & 1 & Always set to white. \\
+		    \hline
+		    \textit{Minimum distance between lines} & 5 & The default skimage value, seems suitable. \\ 
+		    \hline
+		    \textit{Minimum angle between lines} & 5 & The default in skimage, assumed to be degrees. \\
+		    \hline
+		    \textit{Fraction} & 0.3 & The default is 0.5 in skimage. \\ 
+		    \hline
+		    \textit{Peak number} & 5 & The default value is assumed maximum in skimage. \\ 
+		    \hline
+	    \end{tabular}
+	    \caption{Inputs for the slicing hough line transform function in python, used for the analysis of each image.}
+	    \label{HoughmeasureboxInputs}
+	    \end{center}
+    \end{table}
+    
+    Using these inputs, \textit{hough\_measurebox} is able to provide a series of angles (in degrees) and sizes (in pixels) for each hydride slice, these can be concatenated into lists and stacked into an array. The resulting output is then an array of angles and heights, corresponding to every hydride detected according to the input. An example of what this looks like in python is displayed in Figure \ref{fig:houghmeasure_chu1}.
+    
+    \begin{figure}[h]
+        \centering
+        \includegraphics[scale=0.5]{Figures/houghmeasure_chu1.PNG}
+        \caption{The \textit{hough\_meaurebox} output for chu 1, boxes can be seen plotted around the detected objects as according to skimage.measure label and the hough peak lines are plotted for the specified inputs (Table \ref{HoughmeasureboxInputs}).}
+        \label{fig:houghmeasure_chu1}
+    \end{figure}
+    
+    To then analyse this output and calculate the respective RHF's, the criteria discussed earlier from \ref{equ:RHF} would have to be effectively reversed; as the angles from the hough transform are taken in respect to the y-axis (which is the radial direction in a hydride). This is a simple case of reversing the criteria:
+    
+    \begin{equation}
+        f_i = 0; 65^{\circ} \leq \theta \leq 90^{\circ},\hspace{1cm} or = 0.5;  40^{\circ} \leq \theta \leq 65^{\circ}, \hspace{1cm} or = 1.0; 0^{\circ} \leq \theta \leq 40^{\circ}
+    \end{equation}
+    
+    This again implemented by writing a python function, that would perform equation \ref{equ:RHF} on the array of angles and heights. This function would then provide a radial hydride fraction (to 2 decimal places) and a maximum and minimum hydride size in pixels, which can be discussed in each case.
+    
 \subsection{Implementing Automatic Testing}
     In order to learn how to implement automatic testing using GitHub and Python, and to check reliability of the analysis of the code in this study, automatic testing was implemented. This was done using the Python Application GitHub action in Git workflows, utilising the \textit{pytest} package. As it is difficult to automatically test the image processing steps of the study, it was thought to assess the the analysis of RHF as this is a quantity that can be somewhat predicted. So a methodology was proposed to produce a number of "test hydride" images which had a known radial hydride fraction, or in this case approximately estimated based on the previously explained criteria of RHF. Figures \ref{TestImages64} and \ref{TestImage300} below shows the test images created.
 
-    %is there a way to neaten out this hspace without a hfill ??
     \begin{figure}[H]
 		\begin{center}
 		\subfloat[Test image 1, 64 by 64 pixels, with 3 radially orientated false hydrides]{\includegraphics[width=0.2\textwidth]{./Figures/Test_1.jpg}
@@ -397,32 +419,101 @@ The inputs for the \textit{hough\_measurebox} function are summarised in Table \
     After this, testing could be implemented with the criteria as explained above in each case. A separate test .py file was made for each test image, and then whenever the testing reposity was pushed or a pull request was created, the test workflow would run.
 
 \section{Results and Discussion}
-\subsection{Resulting Radial Hydride Fractions}
-Results
+\subsection{Radial Hydride Fractions with Standard Inputs}
+    The resulting radial hydride fractions and hydride sizes for each analysed image (low pass condition, Figure \ref{fig:combined_thresholds}) are shown in Table . It can be seen that despite what was thought to be a large variation in hydride morphology an definition, the overall RHF's do not vary very largely and this could be for a number of reasons.
 
-influence of peak number on RHF - 1, 5, 10 - greater detect-ability of objects within images.
+    \begin{table}[ht]
+	    \begin{center}
+	    \begin{tabular}{ |c|c|c|c| } 
+		    \hline
+		    \textbf{Image Reference} & \textbf{RHF} & \textbf{Minimum object size (pixels)} & \textbf{Maximum object size (pixels)} \\
+		    \hline
+		    \textit{chu1} & 0.24 & 1.0 & 267.0 \\
+		    \hline
+		    \textit{chu2} & 0.43 & 1.0 & 245.0 \\
+		    \hline
+		    \textit{chu3} & 0.54 & 1.0 & 491.0 \\ 
+		    \hline
+		    \textit{chu7} & 0.57 & 1.0 & 76.0 \\ 
+		    \hline
+		    \textit{chu11} & 0.46 & 1.0 & 394.0 \\ 
+		    \hline
+	    \end{tabular}
+	    \caption{Results of the radial hydride fraction analysis of each tested image, according to inputs of Table \ref{Houghmeasureboxinputs}}
+	    \end{center}
+	    \label{tab:RHF_results}
+    \end{table}
 
-Noise as top \& bottom of image does influence results - larger objects are created and detected as being large hydrides.
+    \begin{itemize}
+        \item \textbf{Noise as top \& bottom of image does influence results - larger objects are created and detected as being large hydrides.}
+        \item \textbf{WHAT DO WE SAY ABOUT THE RESULTING RHF'S, SIZES ETC., ALL RESULTS ARE NOW HERE}
+    \end{itemize}
+    
+    \textbf{SOME NOTES}
+    Noise consideration - top and bottom images, darkened effect from microscope view which is now a large binary object.
+    \\
+    \\
+    Size - some images have larger and thicker hydrides.
+    \\
+    \\
+    Does it vary per image, we don't see a lot of variation ~most are 50\%.
+    \\
+    \\
+    Small and large object detection - additional pre-processing steps needed in an ideal scenario?
 
+\subsection{Influence of Peak Number on Radial Hydride Fraction}
+
+    The peak number is the main input in skimage hough transform package that decides how many hough line peaks will be plotted and shown in the output data. It was thought that performing a small investigation on the effect of adjusting this may be useful in learning more about the limitations of RHF and the python code written. Image 3 (chu 3), provides a complex mixed morphology and was thought to be a good candidate to assess this, though image 1 (chu 1) was also thought to be worth trying. Table \ref{tab:peakno_tests} shows the results of what was attempted, peak numbers 2 and 10 were used in comparison with a peak number of 5 as used in the main results.
+
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{|c|c|c|}
+        \hline
+        \multicolumn{1}{|l|}{\textbf{Image Reference}} & \textbf{Peak Number} & \textbf{RHF} \\ \hline
+        \multirow{}{}{\textit{Chu 1}}                & 2                    & 0.56         \\ 
+                                                      & 10                   & 0.54         \\ \hline
+        \multirow{}{}{\textit{Chu 3}}                & 2                    & 0.13         \\ 
+                                                      & 10                   & 0.32         \\ \hline
+        \end{tabular}
+        \caption{The influence of adjusting peak number on RHF, in the case of images 1 and 3.}
+        \label{tab:peakno_tests}
+    \end{table}
+    
+    \begin{figure}[H]
+        \centering
+        \subfloat[Peak number = 2]{\includegraphics[scale=0.5]{Figures/houghmeasure_chu3_PN2.PNG}}
+        \hfill
+        \subfloat[Peak number = 10]{\includegraphics[scale=0.5]{Figures/houghmeasure_chu3_PN10.PNG}}
+        \caption{Chu 3 analysed as describe in regards to Table \ref{tab:peakno_tests} .}
+    \label{fig:chu3_PN_comparison}
+    \end{figure}
+    
+    It can be seen that in the case of Chu 3 a peak number reduction only has a slight effect, increasing the RHF by 0.02 (only a marginal increase). Perhaps this may imply that larger hydrides are dominant in this case (which is expected), as there is still a midpoint between radial and circumferentially aligned hydrides which are being assessed in image 3 and hence the 56\% RHF. With limited peaks, only the predominant hough peaks are plotted for each slice (which tends to be the larger objects). However, we can see that many small objects are still being assigned their own slice and being analysed, which is an issue with the code and would require greater image processing steps to remove these smaller objects.
+    
+    When peak number is increased Many lines appear as expected, and the overall the directions of each seem very undetermined, they pass through a number of objects in a slice but may not necessary have an overall large contact length, somewhat reflecting what was seen with the old hough line transform function (Figure \ref{fig:hough_initial}). This does not seem to influence the RHF significantly though, as it has only decreased by 0.01 (1\%). This further reinforces the point from above, with larger hydrides having more influence on the analysis.
+    \\
+    \\
+    A problem is introduced when looking at the effect of changing peak number on Chu 1, here it seems to have a major effect in each case. Decreasing peak number to 2 does seem to lower RHF to 0.13 (from 0.24 with 5 originally), which implies that larger hydrides take a more dominant role. However increasing peak number to 10, shifts RHF upwards to 0.32 meaning that the micrograph effectively becomes more radially orientated despite this is not the case (recall Figure \ref{fig:houghmeasure_chu1}). Looking back at the image output, it is possible that the many smaller objects are being heavily factored into the RHF calculation, or lines of different directions that could be detected on the larger hydrides. For example, at the bottom of Chu 1 is a larger darkened area of noise which is treated as a huge object, more radially orientated lines could possibly be plotted on this. The overall amount of smaller objects being interpreted in radial orientation may actually have an increasing effect on the overall RHF of the image, as each object has its own slice with lines within according to the peak number. This further confirms that improvements need to be made in the image processing stages. 
+    
 \subsection{Automatic Testing; Pytest Results}
-The output of the tests produced by the Git workflow as summarised in Table \ref{TestResults}.
+    The output of the tests produced by the Git workflow as summarised in Table \ref{TestResults}.
 
-\begin{table}[h]
-    \centering
-    \begin{tabular}{|c|c|c|}
-    \hline
-        \textbf{Test Image} & \textbf{Tests Passed} & \textbf{Output RHF From Testing}  \\
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{|c|c|c|}
         \hline
-        1 & 3/3 & 1.0 \\
-        \hline
-        2 & 1/3 & 0.13 \\
-        \hline
-        3 & 2/3 & 0.01 \\
-        \hline
-    \end{tabular}
-    \caption{The output of the automatic testing with pytest on GitHub using test images.}
-    \label{TestResults}
-\end{table}
+            \textbf{Test Image} & \textbf{Tests Passed} & \textbf{Output RHF From Testing}  \\
+            \hline
+            1 & 3/3 & 1.0 \\
+            \hline
+            2 & 1/3 & 0.13 \\
+            \hline
+            3 & 2/3 & 0.01 \\
+            \hline
+        \end{tabular}
+        \caption{The output of the automatic testing with pytest on GitHub using test images.}
+        \label{TestResults}
+    \end{table}
 
     It can be seen from the results, that only Test image 1 was able to pass all tests. Test images 2 and 3 failed some of the criteria. This is made obvious when looking at the output RHF in Table \ref{TestResults}. Test image 2 shows an unexpected result, and Test image 3 has some marginal error and is 1\% out from the expected value. This is not a major concern for Test image 3, as it is approximately correct (though the code does not recognise this), however for Test image 2 these is quite a high margin of error with RHF being approximately 13\% greater than expected. In order to verify what this may, the images were run through the python functions manually using inputs from Table \ref{tab:TestImageTable} to see the hough transform output. This is shown in Figure \ref{TestImagesProcessed} for Test images 2 and 3.
 
