@@ -12,7 +12,10 @@
 	\maketitle
 	
 	\begin{center} \textit{This report details progress made during the Research Software \& Engineering in Python module, in which image processing techniques are utilised to automatically analyse micrograph images of zirconium hydride (ZrH) structures in samples of metallic zirconium. The radial hydride fraction (RHF) is computed for a series of micrographs. Explanation of the method, including relevant images and discussion of code elements are included.} \end{center}
-	
+
+\newpage
+\tableofcontents
+\newpage
 	\section{Introduction \& Review of Existing Literature}
 	\subsection{Background}
 	During the service lifetime of zirconium fuel cladding within a light-water reactor core, several phenomena manifest as a result of both direct neutron irradiation and chemical reactivity with the core coolant. One of the more prominent of these is the formation of zirconium hydride within the bulk material, resulting from the radiolysis of core coolant and subsequent migration of hydrogen through the lattice, which then reacts with the metal and accumulates at grain boundaries. As zirconium hydride is typically more brittle than the lattice itself, this serves to compromise the local integrity of the lattice. 
@@ -420,7 +423,7 @@
 
 \section{Results and Discussion}
 \subsection{Radial Hydride Fractions with Standard Inputs}
-    The resulting radial hydride fractions and hydride sizes for each analysed image (low pass condition, Figure \ref{fig:combined_thresholds}) are shown in Table . It can be seen that despite what was thought to be a large variation in hydride morphology an definition, the overall RHF's do not vary very largely and this could be for a number of reasons.
+    The resulting radial hydride fractions and hydride sizes for each analysed image (low pass condition, Figure \ref{fig:combined_thresholds}) are shown in Table \ref{tab:RHF_results}. It can be seen that despite what was thought to be a large variation in hydride morphology and definition, the overall RHF's do not vary outside of the range of 40\%-60\% and this could be for a number of reasons. Figure shows the output of hough transform python function for each of the LP binary images from Figure \ref{fig:combined_thresholds}.
 
     \begin{table}[ht]
 	    \begin{center}
@@ -444,22 +447,33 @@
 	    \label{tab:RHF_results}
     \end{table}
 
+    \begin{figure}[H]
+		    \centering
+		        \subfloat[\textit{Hough Transform Analysed Chu 1 (repeated from Figure \ref{fig:houghmeasure_chu1} for clarity)}]{\includegraphics[scale=0.4]{Figures/houghmeasure_chu1.PNG}\label{chu1hough}}
+		        
+		        \subfloat[\textit{Hough Transform Analysed Chu 2}]{\includegraphics[scale=0.4]{Figures/houghmeasure_chu2.PNG}\label{chu2hough}}
+		        
+		        \subfloat[\textit{Hough Transform Analysed Chu 3}]{\includegraphics[scale=0.4]{Figures/houghmeasure_chu3.PNG}\label{chu3hough}}
+		        
+		        \subfloat[\textit{Hough Transform AnalysedChu 7}]{\includegraphics[scale=0.4]{Figures/houghmeasure_chu7.PNG}\label{chu7hough}}
+		        
+		        \subfloat[\textit{Hough Transform Analysed Chu 11}]{\includegraphics[scale=0.4]{Figures/houghmeasure_chu11.PNG}\label{chu11hough}}
+	        \caption{The output of \texit{hough\_measurebox.py} on all binary images from Figure \ref{fig:combined_thresholds}, using the inputs specified in Table \ref{HoughmeasureboxInputs} for the RHF analysis.}
+	        \label{fig:RHF_results_all}
+	\end{figure}
+
+    \textbf{SOME NOTES}
     \begin{itemize}
+        \item pre-processing stages work effectively and provide useable .
+        \item Noise consideration - top and bottom images, darkened effect from microscope view or from image processing stages.
         \item \textbf{Noise as top \& bottom of image does influence results - larger objects are created and detected as being large hydrides.}
         \item \textbf{WHAT DO WE SAY ABOUT THE RESULTING RHF'S, SIZES ETC., ALL RESULTS ARE NOW HERE}
-    \end{itemize}
-    
-    \textbf{SOME NOTES}
-    Noise consideration - top and bottom images, darkened effect from microscope view which is now a large binary object.
-    \\
-    \\
-    Size - some images have larger and thicker hydrides.
-    \\
-    \\
-    Does it vary per image, we don't see a lot of variation ~most are 50\%.
-    \\
-    \\
-    Small and large object detection - additional pre-processing steps needed in an ideal scenario?
+        \item Chu 7 and 11 have a similar proportion of radial and circumferential orietnated hydrides, so do chu 2 and 3 - so perhaps we'd expect similiar values
+        \item There is a clear difference between all of them and Chu 1.
+        \item In hindsight, another fully circumferential and fully radially orientated hydride should've been analysed (polarised morphology).
+        \item In hindsight, should have included a small object removal stage.
+        \item In Chu 3, there is significant darkening in the bottom which has created a large connected object which is then taken by the code as fully radial ~ this may heavily impact the results (despite some radially orientated hydrides can be seen nearby).
+        \end{itemize}
 
 \subsection{Influence of Peak Number on Radial Hydride Fraction}
 
@@ -575,9 +589,18 @@
 \subsection{On Hydride Structure Analysis}
 
 \subsection{Recommendations}
+\begin{itemize}
+    \item Image processing could be more optimised, i.e. a small object removal stage, and there should be an extensive investigation into threshold selection as it was perhaps not optimised well.
+    \item Each input parameter (refer to table) of the hough line transform 
+    
+    \item correlate RHF with mechanical properties or embrittlment
+    \item RHF could be linked to actual longetivity of the sample, to make a practical link (or crack likelihood?)
+    \item additional pre-processing to remove dark fringes? Skikit-image offers package 'NiBlack'
+\end{itemize}
+
 
 \newpage
-\bibliographystyle{IEEEtran}
+\bibliographystyle{abbrv}
 \bibliography{References}
 
 \newpage
@@ -591,7 +614,24 @@
 	    \label{fig:skimage_threshold}
 	\end{figure}
 	
-\section{: Making the code user friendly}
-Small description on how functions were written to make the process easy for the user.
+\section{Individual Reflections}
+\subsection{Jake the potato harvester}
+Your contribution to the project
+war'gwan dickheads my drilla big al in the house spitting bars in your grill, tell your gyal to buss me her snapchat fam
+Talk to my g sully for top bants and kek you dusty yute
 
+How successful you think it was
+
+How would you address the project differently
+\subsection{Sulayman the Magnificent}
+
+\subsection{A. Hanson}
+Alexander the Great
+code works
+lel
+one pound hydride
+very very good and very very cheap
+come on ladies
+come on ladies
+one pound hydride
 \end{document}
