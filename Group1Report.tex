@@ -11,7 +11,7 @@
 \begin{document}
 	\maketitle
 	
-	\begin{center} \textit{This report details progress made during the Research Software \& Engineering in Python module, in which image processing techniques are utilised to automatically analyse micrograph images of zirconium hydride (ZrH) structures in samples of metallic zirconium. The radial hydride fraction (RHF) is computed for a series of micrographs. Explanation of the method, including relevant images and discussion of code elements are included.} \end{center}
+	\begin{center} \textit{This report details progress made during the Research Software \& Engineering in Python module, in which image processing techniques are utilised to analyse micrograph images of zirconium hydride (ZrH) structures in samples of metallic zirconium. The radial hydride fraction (RHF) has been computed for a series of micrographs with mixed morphology's, an explanation of the method, including relevant images and discussion the approach in python are included. It was found that gaussian blurring followed by manual thresholding was a suitable way to produce binary micrographs for analysis. Resulting RHF's were calculated after implementation of hough line transforms on individually identified objects in the micrographs, for mixed morphology they were in the range of 40-60\%, which was expected. However there was an unexpected result regarding hydrides exhibiting circumferential morphology, further work is suggested to address this.} \end{center}
 
 \newpage
 \tableofcontents
@@ -424,7 +424,7 @@
 
 \section{Results and Discussion}
 \subsection{Radial Hydride Fractions with Standard Inputs}
-    The resulting radial hydride fractions and hydride sizes for each analysed image (low pass condition, Figure \ref{fig:combined_thresholds}) are shown in Table \ref{tab:RHF_results}. It can be seen that despite what was thought to be a large variation in hydride morphology and definition, the overall RHF's do not vary outside of the range of 40\%-60\% and this could be for a number of reasons. Figure shows the output of hough transform python function for each of the LP binary images from Figure \ref{fig:combined_thresholds}.
+    The resulting radial hydride fractions and hydride sizes for each analysed image (low pass condition, Figure \ref{fig:combined_thresholds}) are shown in Table \ref{tab:RHF_results} . It can be seen that despite what was thought to be a large variation in hydride morphology and definition, the overall RHF's do not vary outside of the range of 40\%-60\% and this could be for a number of reasons. Figure shows the output of hough transform python function for each of the LP binary images from Figure \ref{fig:combined_thresholds}.
 
     \begin{table}[ht]
 	    \begin{center}
@@ -443,9 +443,9 @@
 		    \textit{chu11} & 0.46 & 1.0 & 394.0 \\ 
 		    \hline
 	    \end{tabular}
-	    \caption{Results of the radial hydride fraction analysis of each tested image, according to inputs of Table \ref{Houghmeasureboxinputs}}
-	    \end{center}
+	    \caption{Results of the radial hydride fraction analysis of each tested image, according to inputs of Table \ref{HoughmeasureboxInputs}. }
 	    \label{tab:RHF_results}
+	    \end{center}
     \end{table}
 
     \begin{figure}[H]
@@ -589,16 +589,20 @@
 
 \section{Conclusions}
 \subsection{On Hydride Structure Analysis}
+\noindent 
+A selection of 5 Zr hydride micrograph images were processed in python to produce binary images which could then be analysed to calculate \textit{radial hydride fractions} to assess connectivity of hydrides. Although the outlined manual thresholding approach utilised with a Gaussian blur filter generated reasonable results for the selected micrographs, a significant quantity of noise remained present. These small aberrations were accounted for during RHF calculation for all five images, and a majority of the analysed images showed an RHF of approximately 40-60\%. These exhibited mixed morphologies so it was difficult to predict the outcome, however it is clear from the methodology that the noise appears to contribute to errors in the respective values. The image ‘Chu1’ is a notable example, despite exhibiting an almost fully circumferential morphology it produced an RHF of 24\%. The non-uniform background, containing a dark \textit{fringe} at the bottom of the image resulted in the detection of one large object by the slicing technique. Resulting peaks then contributed significantly to the computed RHF value. It is suggested that additional pre-processing or alteration of the current approach should be carried out to further improve the reliability of this RHF method computed via python.
 
 \subsection{Recommendations}
-\begin{itemize}
-    \item Image processing could be more optimised, i.e. a small object removal stage, and there should be an extensive investigation into threshold selection as it was perhaps not optimised well.
-    \item Each input parameter (refer to table) of the hough line transform 
-    \item correlate RHF with mechanical properties or embrittlment
-    \item RHF could be linked to actual longetivity of the sample, to make a practical link (or crack likelihood?)
-\end{itemize}
 
-\noindent Although the outlined manual thresholding approach utilised with a Gaussian blur filter generated reasonable results for the selected micrographs, a significant quantity of noise remains present. These small aberrations were accounted for during RHF calculation for all five images, and appear to contribute to errors in the respective values. To solve this issue, additional pre-processing or alteration of the current approach may be carried out to further improve the reliability of the method. The image ‘Chu1’ is a notable example, as the non-uniform background, which exhibited a dark \textit{fringe} at the bottom of the image, resulted in the detection of one large object by the slicing technique. The resulting peaks may contribute significantly to the computed RHF value and should ideally be correctly accounted for. The packages \textit{Niblack} and \textit{Sauvola} from Scikit-Image aim to solve issues relating to the existence of these dark spots. Rather than the \textit{global thresholding} approach used in this project, these packages perform \textit{localised} thresholding. This method is, computationally, more time consuming but can produce binarised images with greater clarity. Multiple thresholds are calculated for individual pixels, as the function performs iterative calculations, considering the mean and standard deviation of neighbouring pixels before converting the image array values \cite{ScikitimageC}.
+First it is suggested that image processing could be more optimised, or additional pre-processing carried out. It would be ideal to carry out a more extensive investigation into threshold selection regarding binary images, as it was only optimised based on what was judged as best by the users. Alternatively, the packages \textit{Niblack} and \textit{Sauvola} from Scikit-Image aim to solve issues relating to the existence of dark spots and noise at the base of micrographs. Rather than the \textit{global thresholding} approach used in this project, these packages perform \textit{localised} thresholding. This method is, computationally, more time consuming but can produce binarised images with greater clarity. Multiple thresholds are calculated for individual pixels, as the function performs iterative calculations, considering the mean and standard deviation of neighbouring pixels before converting the image array values \cite{ScikitimageC}. Additionally Scikit-Image has morphology packages for dealing with small object removal, such as a \textit{white top-hat transform} where bright spots are identified and subtracted from the image background. This would be another point to add into the initial image processing. Perhaps these python features would produce greater clarity in the micrographs and a more accurate RHF.
+\\
+\\
+Further work relating to this specific python code would involved tests and investigation into the effect of each hough line transform parameter which was discussed in Table \ref{HoughmeasureboxInputs}. \textit{Peak number} was briefly looked into in the results section, and it was found to have a mixed effect on the RHF depending on the corresponding morphology of the hydrides present, as it chooses the amount of peaks interpreted. It is likely that some other parameters, such as \textit{minimum angle} and \textit{distance} between lines would have a major effect on the resulting hough peaks and optimal values should be found by addressing a larger data set.
+\\
+\\
+If the scope of the study was to be increased, it would be interesting to see if a clear correlation can be evaluated between zircalloy sample mechanical properties, or longetivity, and their cross sectional RHF (after taking  respective micrographs). Though this is a large simplification...
+
+\textbf{JAKE CAN YOU ADD ANYTHING TO THIS ONE PLEASE? YOU KNOW MOIRE :)}
 
 \newpage
 \bibliographystyle{abbrv}
@@ -618,8 +622,9 @@
 \section{Individual Reflections}
 \subsection{Jake the potato harvester}
 Your contribution to the project
-war'gwan dickheads my drilla big al in the house spitting bars in your grill, tell your gyal to buss me her snapchat fam
-Talk to my g sully for top bants and kek you dusty yute
+
+\textit{'gwan dickheads my drilla big al in the house spitting bars in your grill, tell your gyal to buss me her snapchat fam
+Talk to my g sully for top bants and kek you dusty yute}
 
 How successful you think it was
 
@@ -627,12 +632,10 @@ How would you address the project differently
 \subsection{Sulayman the Magnificent}
 
 \subsection{A. Hanson}
-Alexander the Great
-code works
-lel
-one pound hydride
-very very good and very very cheap
-come on ladies
-come on ladies
-one pound hydride
+During the project, I was responsible for investigating and testing code for image processing via Scikit Image (skimage), out the two routes the group considered. From this, the python functions \texit{skblur.py} and \texit{skbinary.py} were produced which applied the Gaussian blur and manual thresholding methodology as described (later combined to \textit{skhydride.py} in Github). A demonstration Jupyter notebook was produced for these, which would allow other group members to easily adapt the methodology. The group worked together to optimise the image processing parameters from these functions, this can be found in the working repository.
+
+After this stage, I went on to look at how connectivity of objects could be assessed from binary images in python, and came across the hough transform method, again in skimage. Following this I created the initial hough transform function \textit{hough\_measure.py} and \textit{RHF\_prop} after looking at how to calculate radial hydride fraction in an early stage. This was able to perform calculations on the images and produce an RHF, however it had been modified and was highly unreliable. To improve this, I went on to create \textit{hough\_measurebox.py} which employed the "slicing" method to isolate objects in a binary image and then take the hough transform, inspired by \cite{Maric2021}. From this the group was able to calculate an actual RHF as described in equation \ref{equ:RHF}, by Colas et al. \cite{Colas2013}. In each case the python functions were written with docstrings and clearly labelled input parameters and outputs, these were made to be concise so that users could easily call on the "help" function when applying any of the .py files from the project. An attempt was made to format the function code in a standard format, so that it was easy to read and could be adjusted according to any changes. This has been implemented clearly in \textit{Group 1 - Example notebook.ipynb} in the final Github repository alongside the functions, which I wrote after the group finalised the approach. Automatic testing with pytest was the result of group work, however I was responsible for bug fixing and ensuring that pytest was able to run with our final code. There was some difficulty in finding the solution as to why the tests were producing unreliable results, S. Khan assisted in this case. I was then able to finalise the pytest functions and apply them to our working repository properly.
+
+I think the project was a success in terms of the knowledge and experience I have gained with image processing in python, and implementing functions in python alongside Github. The group was able to produce a good methodology for finding RHF in hydride micrographs, however there is clearly issues with this approach that require further work - as the RHF is not as accurate as I would've wanted. If I were to approach the project differently, I would've encouraged greater planning and research of the scope in the earlier stages (however this would require additional time). I think as a group we did not realise the difficulty in implementing some of the problem solving required in python, and I personally am only a novice user. It is easy to "hit a wall" when coding, and this can be very time consuming. We each investigated different areas of the project initially and tended to work individually for a majority of the project time spent, this then made it difficult for the team to be on the same page regarding individual python scripts/functions (it is possible that this may have been exaggerated by the pandemic). So, it would take a lot of time to solve particular issues in the pythons functions used. I also think it was difficult to know where to look regarding analysing "connectivity" of objects in binary image in python. It took longer than I would expect for the team to fully implement good image processing, and then we branched out regarding how to approach assessing connectivity and it was difficult to find a direction that yielded results. To address this I think that perhaps we should have brainstormed approaches to classifying binary objects and connectivity, or be given guidance on some topics or ideas to pursue at an early stage (i.e. packages or method names).
+
 \end{document}
